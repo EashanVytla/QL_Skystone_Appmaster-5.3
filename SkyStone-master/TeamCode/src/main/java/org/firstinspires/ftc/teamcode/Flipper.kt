@@ -30,18 +30,19 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
 
     val capClamp : Caching_Servo
     val capDeposit : Caching_Servo
-    var capped = false
+
     var clamped = false
     var prev_sequence = -1
 
     companion object {
+        var capped = false
         const val case_right_turn_value = 0.775
         const val case_left_turn_value = 0.15
         const val case_center_turn_value = 0.5
 
         const val handshake_flip_position = 0.45 //THIS IS GOING BACKWARDS 1 -> 0
 
-        const val turnPos_IDOL = 0.4635
+        const val turnPos_IDOL = 0.4935
         const val flipperPos_IDOL = 0.945 //THIS IS GOING BACKWARDS 1 -> 0
         const val DepositPos_IDOL = 0.1 //THIS IS GOING BACKWARDS 1 -> 0
 
@@ -117,9 +118,9 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
     fun initialize(){
         clamp()
         deposit.setPosition(0.0)
-        turn.setPosition(turnPos)
-        leftpm.setPosition(0.2)
-        rightpm.setPosition(0.75)
+        turn.setPosition(turnPos_IDOL)
+        leftpm.setPosition(0.3)
+        rightpm.setPosition(0.65)
         capClamp.setPosition(0.7)
         capDeposit.setPosition(0.0)
         write()
@@ -137,7 +138,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
 
     private fun getCase() : Int{
         read()
-        if (dist >= 6.5 && dist <= 9.25) {
+        if ((dist >= 6.5 && dist <= 9.25) || (dist >= 13.0)) {
             //Case regular
             //6.75 - 7.5
             rcase = 0
@@ -168,12 +169,16 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         leftpm.setPosition(0.95)
         rightpm.setPosition(0.0)
         grabbed = true
+
+        write()
     }
 
     fun resetPlatform(){
-        leftpm.setPosition(0.2)
-        rightpm.setPosition(0.75)
+        leftpm.setPosition(0.3)
+        rightpm.setPosition(0.65)
         grabbed = false
+
+        write()
     }
 
     private fun isPress(clicked : Boolean, previous : Boolean) : Boolean{
@@ -246,6 +251,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
                 newState(flip_state.STATE_REALLIGN)
             }
         }
+        /*
         if(g2.right_trigger >= 0.5){
             turnPos = case_right_turn_value
             newState(flip_state.STATE_REALLIGN)
@@ -254,6 +260,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
             turnPos = case_left_turn_value
             newState(flip_state.STATE_REALLIGN)
         }
+         */
 
         if (betterFlipState == flip_state.STATE_FLIP){
             unclamp()

@@ -13,9 +13,9 @@ import org.openftc.revextensions2.RevExtensions2;
 @TeleOp(name = "autoalligntest", group = "proto")
 public class AutoAllignTest extends OpMode {
     double headingerror;
-    double kpA = 0.39; //0.35625
-    double kiA = 0.008; //0.005
-    double kdA = 0.2; //0.2    0.3
+    double kpA = 1.0; //FINAL Regular turn: 0.39
+    double kiA = 0.0; //FINAL Regular turn: 0.005
+    double kdA = 0.0; //FINAL Regular turn: 0.2
     Mecanum_Drive drive;
     double angle;
     double prevheading = 0.0;
@@ -25,8 +25,12 @@ public class AutoAllignTest extends OpMode {
     double dt = 0.0;
     double prevtime = 0.0;
 
+    Flipper flip;
+
     private ExpansionHubEx hub;
     private ExpansionHubEx hub2;
+
+    Intake intake;
 
     public void init(){
         RevExtensions2.init();
@@ -34,13 +38,31 @@ public class AutoAllignTest extends OpMode {
         hub2 = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 1");
 
         drive = new Mecanum_Drive(hardwareMap);
+
+        flip = new Flipper(hardwareMap, telemetry);
+        intake = new Intake(hardwareMap);
+
+        flip.grabPlatform();
+        intake.close();
+        intake.write();
     }
 
     public void loop(){
+        flip.grabPlatform();
+
         dt = System.currentTimeMillis() - prev_time;
         prevtime = System.currentTimeMillis();
         angle = drive.angleWrap(drive.getExternalHeading());
         headingerror = Math.PI/2 - angle;
+
+        if (Math.abs(headingerror) > Math.toRadians(180.0)){
+            if (headingerror > 0) {
+                headingerror = -((Math.PI * 2) - Math.abs(headingerror));
+            }
+            else{
+                headingerror = ((Math.PI * 2) - Math.abs(headingerror));
+            }
+        }
 
         double prop = headingerror * kpA;
         double integral = integralError * kiA;

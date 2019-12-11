@@ -124,7 +124,12 @@ public class QL_Auto_Skystone extends OpMode {
 
     @Override
     public void init_loop(){
-        SkyStonePos = pipeline.getSkyPos();
+        SkyStonePos = 2 - pipeline.getSkyPos();
+        if(SkyStonePos == 1){
+            SkyStonePos =  0;
+        }else if(SkyStonePos == 0){
+            SkyStonePos = 1;
+        }
         telemetry.addData("Skystone Pos: ", SkyStonePos);
     }
 

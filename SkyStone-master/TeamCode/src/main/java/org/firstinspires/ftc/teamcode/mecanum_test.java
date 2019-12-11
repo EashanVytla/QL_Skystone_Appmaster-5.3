@@ -30,7 +30,7 @@ public class mecanum_test extends OpMode {
 
     public void loop(){
         drive.read(hub.getBulkInputData());
-        drive.drive(gamepad1);
+        drive.drive(gamepad1, gamepad2);
 
         telemetry.addData("Angle: ", drive.getExternalHeading());
 

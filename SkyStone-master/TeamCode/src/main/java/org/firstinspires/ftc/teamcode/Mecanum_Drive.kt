@@ -21,6 +21,8 @@ import kotlin.math.*
 class Mecanum_Drive(hardwareMap : HardwareMap){
     var motors = ArrayList<Caching_Motor>()
 
+    var strafeWheel = Dead_Wheel(MA3_Encoder( "a1", hardwareMap, 2.464))
+
     var prev_pos = ArrayList<Double>()
     var prev_heading = 0.0
 
@@ -43,6 +45,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
 
     var angle: Double = 0.toDouble()
     var prevheading = 0.0
+    var slowmode2 = false
 
     var integralError = 0.0
     var prev_time = System.currentTimeMillis()
@@ -57,6 +60,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
 
     var previous = false
     var previous2 = false
+    var previous3 = false
     var slow_mode = false
 
     var mode = false
@@ -65,12 +69,26 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
 
     var headingLock = false
 
+    var automateLock = false
+
+    enum class State{
+        STATE_STRAFE,
+        STATE_IDLE
+    }
+
+    var state = State.STATE_IDLE
+
+    var mStateTime = ElapsedTime()
+
+    var previous4 = false
+
     companion object{
         var refresh_rate = 0.5  //ngl this is kinda scary but you do what u gotta do to get 300 hz
 
         const val kpA = 0.39//0.35625
         const val kiA = 0.008//0.005
         const val kdA = 0.2
+        const val kp = 1.0
     }
 
     init{
@@ -78,6 +96,9 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
         motors.add(Caching_Motor(hardwareMap, "back_left"))
         motors.add(Caching_Motor(hardwareMap, "back_right"))
         motors.add(Caching_Motor(hardwareMap, "up_right"))
+
+        strafeWheel.encoder.reverse()
+        strafeWheel.setBehavior(1.53642 * 2.0 * 0.797, 0.0) //1.50608 -0.221642
 
         motors.forEach {
             it.motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
@@ -93,6 +114,14 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
         imu.initialize(parameters)
         orientation = imu.angularOrientation
         time.startTime()
+
+        val data = hub.bulkInputData
+        strafeWheel.encoder.calibrate(data)
+    }
+
+    fun newState(s : State){
+        mStateTime.reset()
+        state = s
     }
 
     private fun tweakRefreshRate(gamepad : Gamepad){
@@ -168,6 +197,31 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
         //write()
     }
 
+    fun targetTurnPlatform(targetAngle : Double){
+        dt = (System.currentTimeMillis() - prev_time).toDouble()
+        prev_time = System.currentTimeMillis()
+        angle = angleWrap(getExternalHeading())
+        headingerror = targetAngle - angle
+
+        if (abs(headingerror) > Math.toRadians(180.0)){
+            if (headingerror > 0) {
+                headingerror = -((Math.PI * 2) - abs(headingerror))
+            }
+            else{
+                headingerror = ((Math.PI * 2) - abs(headingerror))
+            }
+        }
+
+        val prop = headingerror * kp
+        val power = prop
+        if (Math.abs(power) < 0.3) {
+            integralError += headingerror
+        }
+        prevheading = headingerror
+
+        setPower(0.0, 0.0, Range.clip(power, -1.0, 1.0))
+    }
+
     fun targetTurn(drive : Vector2d, targetAngle : Double){
         dt = (System.currentTimeMillis() - prev_time).toDouble()
         prev_time = System.currentTimeMillis()
@@ -187,32 +241,69 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
         setPower(drive.y, drive.x, Range.clip(power, -1.0, 1.0))
     }
 
-    fun isPress2(value : Boolean) : Boolean{
-        return value && !previous2
+    fun isPress2(value : Boolean, previous : Boolean) : Boolean{
+        return value && !previous
     }
 
-    fun drive(gamepad : Gamepad){
-        slow_mode = gamepad.right_trigger > 0.0
+    fun drive(gamepad : Gamepad, gamepad2: Gamepad){
+        slowmode2 = gamepad.right_trigger > 0.0
 
-        if(gamepad.a){
-            slow_mode = !slow_mode
+        if(isPress2(gamepad2.x, previous2)){
+            slow_mode = true
+        }else if(isPress2(gamepad2.b, previous3)){
+            slow_mode = false
         }
 
-        if (slow_mode){
+        if (isPress2(gamepad2.dpad_left, previous4) && !Flipper.capped){
+            automateLock = !automateLock
+            if (automateLock){
+                newState(State.STATE_STRAFE)
+            }
+            else{
+                newState(State.STATE_IDLE)
+            }
+        }
+
+        previous2 = gamepad2.x
+        previous3 = gamepad2.b
+        previous4 = gamepad2.dpad_left
+
+        if (slow_mode || slowmode2){
             fine_tune = 0.5
-            mode = true
         }
         else{
             fine_tune = 0.9
-            mode = false
         }
-        if (!headingLock) {
+
+        if (!automateLock) {
             setPower(fine_tune * gamepad.left_stick_y.toDouble(), fine_tune * gamepad.left_stick_x.toDouble(), -0.5 * gamepad.right_stick_x.toDouble())
         }
         else{
+            capstoneStrafe()
             //targetTurn(Vector2d(fine_tune * gamepad.left_stick_y.toDouble(), fine_tune * gamepad.left_stick_x), Math.PI / 2)
         }
         write()
+    }
+
+    fun capstoneStrafe(){
+        if (state == State.STATE_STRAFE){
+            automateLock = true
+            if (mStateTime.time() >= 1.5){
+                automateLock = false
+                newState(State.STATE_IDLE)
+            }
+            else if (getStrafeDist() > 3.0){
+                automateLock = false
+                newState(State.STATE_IDLE)
+            }
+            else{
+                setPower(0.0, 0.3, 0.0)
+            }
+        }
+    }
+
+    private fun getStrafeDist(): Double {
+        return strafeWheel.getDistance() * 7.0 / 17.536
     }
 
 
@@ -260,6 +351,12 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
             headingAccessCount++
             currHeading = imu.angularOrientation.firstAngle.toDouble()
             orientation = imu.angularOrientation
+        }
+        if (!automateLock){
+            strafeWheel.encoder.calibrate(data)
+        }
+        else{
+            strafeWheel.update(data)
         }
         headingReadCount++
     }

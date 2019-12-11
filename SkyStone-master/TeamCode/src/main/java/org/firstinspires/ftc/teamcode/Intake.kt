@@ -56,7 +56,7 @@ class Intake(hardwareMap: HardwareMap) {
 
     fun kickout(){
         open()
-        setPower(1.0)
+        setPower(0.5)
         write()
         write()
     }
@@ -84,7 +84,7 @@ class Intake(hardwareMap: HardwareMap) {
     fun operate(g1 : Gamepad, g2: Gamepad){
         setPower((0.35 * g1.right_trigger) - (0.2 * g1.left_trigger))
 
-        if(g2.left_bumper || g2.dpad_left || g2.dpad_right || g2.left_trigger > 0.5 || g2.right_trigger > 0.5){
+        if(g2.left_bumper|| g2.left_trigger > 0.5 || g2.right_trigger > 0.5){
             newState(clamp.OPEN)
         }
 
@@ -95,9 +95,11 @@ class Intake(hardwareMap: HardwareMap) {
         }
 
         if(clampst == clamp.OPEN){
-            open()
             if (time.time() >= 5.0){
                 close()
+            }
+            else{
+                open()
             }
         }
 

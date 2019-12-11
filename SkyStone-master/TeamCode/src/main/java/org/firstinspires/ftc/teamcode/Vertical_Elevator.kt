@@ -153,7 +153,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
     }
 
     fun increment_stack_count(){
-        stack_count = (stack_count + 1) % 12
+        stack_count = (stack_count + 1) % 11
     }
 
     fun decrement_stack_count(){
@@ -215,7 +215,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
             decrement_stack_count()
             newState(slideState.STATE_RAISE_INCREMENT)
             dclickt.reset()
-        }else if(g.dpad_left){
+        }/*else if(g.dpad_left){
             if(stack_count >= 2){
                 PIDController(stack_count - 2)
                 if (abs(getLiftHeight() - TargetPos[stack_count - 2]) > 20){
@@ -229,7 +229,9 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
                 }
 
             }
+
         }
+        */
 
 
         if(mSlideState == slideState.STATE_RAISE_INCREMENT){
@@ -240,15 +242,16 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
             if (abs(getLiftHeight() - TargetPos[stack_count]) > 20){
                 holdTime.reset()
             }
-            else if (mStateTime.time() > 2.0){
-                newState(slideState.STATE_IDLE)
-            }
             else{
                 if (holdTime.time() >= 0.5) {
                     newState(slideState.STATE_IDLE)
                 }
             }
-            write()
+
+            if (mStateTime.time() > 2.0){
+                newState(slideState.STATE_IDLE)
+            }
+            //write()
             /*
             fine_tune = 0.5
             PIDController(stack_count)

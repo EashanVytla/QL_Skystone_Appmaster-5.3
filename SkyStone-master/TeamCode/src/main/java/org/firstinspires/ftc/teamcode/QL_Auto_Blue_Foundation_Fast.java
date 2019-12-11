@@ -1,18 +1,22 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.RevBulkData;
 import org.openftc.revextensions2.RevExtensions2;
 
+@Autonomous(name = "Blue Foundation Fast", group = "Competition")
 public class QL_Auto_Blue_Foundation_Fast extends OpMode {
     Dead_Wheel leftWheel;
     Dead_Wheel rightWheel;
     Dead_Wheel strafeWheel;
 
     Mecanum_Drive drive;
+    Intake intake;
 
     Flipper flip;
 
@@ -34,7 +38,9 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
         STATE_PARK,
         STATE_STOP,
         STATE_AUTOALLIGN,
-        STATE_MICROSTRAFE
+        STATE_MICROSTRAFE,
+        STATE_STRAFE1,
+        STATE_LEAVEPLTFRM
     }
 
     private State mRobotState = State.STATE_INIT;
@@ -45,6 +51,7 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
     public void newState(State s){
         mRobotState = s;
         mStateTime.reset();
+        drive.setIntegralError(0.0);
     }
 
     public void init(){
@@ -57,6 +64,7 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
         strafeWheel = new Dead_Wheel(new MA3_Encoder("a1", hardwareMap, 2.464));
         drive = new Mecanum_Drive(hardwareMap);
         flip = new Flipper(hardwareMap, telemetry);
+        intake = new Intake(hardwareMap);
 
         rightWheel.getEncoder().reverse();
         RevBulkData data = hub.getBulkInputData();
@@ -67,6 +75,8 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
         leftWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237); //1.5144 0.0361262
         rightWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237); //1.5204 -0.00305571
         strafeWheel.setBehavior(1.53642 * 2 * 0.797, 0.0); //1.50608 -0.221642
+
+        flip.initialize();
     }
 
     public void start(){
@@ -90,20 +100,32 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
         switch (mRobotState){
             case STATE_INIT:
                 //do init stuffs
-                memo = getForwardDist();
-                newState(State.STATE_DRIVE_TO_FOUNDATION);
+                memo = getStrafeDist();
+                newState(State.STATE_STRAFE1);
+                break;
+            case STATE_STRAFE1:
+                if (getStrafeDist() - memo < -4) {
+                    drive.setPower(0.0, 0.0, 0.0);
+                    memo = getForwardDist();
+                    newState(State.STATE_DRIVE_TO_FOUNDATION);
+                } else {
+                    drive.setPower(0.0, 0.3, 0.0);
+                }
                 break;
             case STATE_DRIVE_TO_FOUNDATION:
-                if (getForwardDist() - memo < -17){
-                    memo = getStrafeDist();
-                    drive.setPower(0.0, 0.0, 0.0);
-                    //newState(State.STATE_STOP);
-                    newState(State.STATE_GRAB_FOUNDATION);
+                if(mStateTime.time() >= 0.5){
+                    if (getForwardDist() - memo < -22.5){
+                        drive.setPower(0.0, 0.0, 0.0);
+                        //newState(State.STATE_STOP);
+                        newState(State.STATE_GRAB_FOUNDATION);
+                    }
+                    else{
+                        intake.kickout();
+                        intake.close();
+                        drive.setPower(0.3, 0.0, 0.0);
+                    }
+                    telemetry.addData("Forward Dist: ", getForwardDist() - memo);
                 }
-                else{
-                    drive.setPower(0.7, 0.7, 0.0);
-                }
-                telemetry.addData("Forward Dist: ", getForwardDist() - memo);
                 break;
             case STATE_STRAFE:
                 if (mStateTime.time() >= 0.5) {
@@ -112,6 +134,7 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
                         memo = getForwardDist();
                         newState(State.STATE_GRAB_FOUNDATION);
                     } else {
+                        intake.setPower(0.0);
                         drive.setPower(0.0, 0.3, 0.0);
                     }
                     telemetry.addData("Strafe Dist: ", getStrafeDist() - memo);
@@ -119,19 +142,20 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
                 break;
             case STATE_GRAB_FOUNDATION:
                 //grab foundation logic
-                //flip.grabPlatform();
+                flip.grabPlatform();
                 memo = getForwardDist();
                 if (mStateTime.time() > 1.0) {
+                    intake.setPower(0.0);
                     newState(State.STATE_PULL_FORWARD);
                 }
                 break;
             case STATE_PULL_FORWARD:
-                if (getForwardDist() - memo > 6.0){
+                if (getForwardDist() - memo > 12.0){
                     drive.setPower(0.0, 0.0, 0.0);
                     newState(State.STATE_TURN);
                 }
                 else{
-                    drive.setPower(-0.7, 0.0, 0.0);
+                    drive.setPower(-0.5, 0.0, 0.0);
                 }
                 telemetry.addData("Forward Dist: ", getForwardDist() - memo);
                 break;
@@ -140,38 +164,44 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
                     drive.read(data);
                     if (Math.abs(getAngle() - (Math.PI) / 2) <= Math.toRadians(5.0)){
                         drive.setPower(0.0, 0.0, 0.0);
-                        memo = getStrafeDist();
-                        newState(State.STATE_STRAFE_TO_EDGE);
+                        memo = getForwardDist();
+                        newState(State.STATE_RELEASE);
                     }else if(mStateTime.time() >= 2.5){
                         drive.setPower(0.0, 0.0, 0.0);
-                        memo = getStrafeDist();
-                        newState(State.STATE_STRAFE_TO_EDGE);
+                        memo = getForwardDist();
+                        newState(State.STATE_RELEASE);
                     }
                     else{
-                        drive.targetTurn((Math.PI)/2);
+                        drive.targetTurnPlatform(Math.PI/2);
                     }
                 }
                 break;
             case STATE_PUSH_BACK:
-                if (getForwardDist() - memo < -6){
+                if (getForwardDist() - memo < -10){
                     drive.setPower(0.0, 0.0, 0.0);
-                    newState(State.STATE_RELEASE);
+                    memo = getStrafeDist();
+                    newState(State.STATE_STRAFE_TO_EDGE);
+                }
+                if(mStateTime.time() >= 1.5){
+                    drive.setPower(0.0, 0.0, 0.0);
+                    memo = getStrafeDist();
+                    newState(State.STATE_STRAFE_TO_EDGE);
                 }
                 else{
-                    drive.setPower(0.3, 0.0, 0.0);
+                    drive.setPower(0.5, 0.0, 0.0);
                 }
                 telemetry.addData("Forward Dist: ", getForwardDist() - memo);
                 break;
             case STATE_RELEASE:
                 //release foundation
                 flip.resetPlatform();
-                memo = getStrafeDist();
+                memo = getForwardDist();
                 if (mStateTime.time() >= 0.5){
-                    newState(State.STATE_TURN);
+                    newState(State.STATE_PUSH_BACK);
                 }
                 break;
             case STATE_STRAFE_TO_EDGE:
-                if (getStrafeDist() - memo < -8.0){
+                if (getStrafeDist() - memo < -12.0){
                     drive.setPower(0.0, 0.0, 0.0);
                     memo = getForwardDist();
                     newState(State.STATE_AUTOALLIGN);
@@ -182,7 +212,7 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
                     newState(State.STATE_AUTOALLIGN);
                 }
                 else{
-                    drive.setPower(0.0, 0.7, 0.0);
+                    drive.setPower(0.0, 0.3, 0.0);
                 }
                 telemetry.addData("Strafe Dist: ", getStrafeDist() - memo);
                 break;
@@ -204,7 +234,7 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
                 }
                 break;
             case STATE_PARK:
-                if (getForwardDist() - memo > 40){
+                if (getForwardDist() - memo > 33){
                     drive.setPower(0.0, 0.0, 0.0);
                     memo = getStrafeDist();
                     newState(State.STATE_MICROSTRAFE);
@@ -239,6 +269,7 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
         }
         flip.write();
         drive.write();
+        intake.write();
     }
 
     private double getForwardDist(){

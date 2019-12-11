@@ -33,6 +33,7 @@ public class Teleop extends OpMode{
     Dead_Wheel strafeWheel;
 
     Double prevStrafe = 0.0;
+    Tape_Extention tape;
 
     public void init(){
         RevExtensions2.init();
@@ -44,6 +45,7 @@ public class Teleop extends OpMode{
         intake = new Intake(hardwareMap);
         //grabber = new GrabberV2(hardwareMap);
         flipper = new Flipper(hardwareMap, telemetry);
+        //tape = new Tape_Extention(hardwareMap);
 
         //grabber.initialize();
         //flipper.initialize();
@@ -58,6 +60,7 @@ public class Teleop extends OpMode{
         strafeWheel = new Dead_Wheel(new MA3_Encoder("a1", hardwareMap, 2.464));
 
         rightWheel.getEncoder().reverse();
+        strafeWheel.getEncoder().reverse();
         leftWheel.getEncoder().calibrate(data);
         rightWheel.getEncoder().calibrate(data2);
         strafeWheel.getEncoder().calibrate(data);
@@ -82,23 +85,14 @@ public class Teleop extends OpMode{
         elevator.read(hub2.getBulkInputData());
         intake.read(hub2.getBulkInputData());
 
-        if(isPress(gamepad2.dpad_left)){
-            if(getStrafeDist() - prevStrafe >= 8.0){
-                drive.setPower(0.0, 0.0, 0.0);
-            }else{
-                drive.setPower(0.0, 0.3, 0.0);
-            }
-        }else{
-            prevStrafe = getStrafeDist();
-        }
-        previous = gamepad2.dpad_left;
 
-        drive.drive(gamepad1);
+        drive.drive(gamepad1, gamepad2);
 
         elevator.operate(gamepad2);
         intake.operate(gamepad1, gamepad2);
         //grabber.operate(gamepad2);
         flipper.operate(gamepad1, gamepad2);
+        //tape.operate(gamepad1);
         //telemetry.addData("DRIVETRAIN MODE", (mode ? "Field Centric" : "Robot Centric"));
         telemetry.addData("DRIVETRAIN MODE", (drive.getMode() ? "Slow Mode" : "Regular Speed"));
         telemetry.addData("IMU", drive.angleWrap(drive.getExternalHeading()));
@@ -138,6 +132,7 @@ public class Teleop extends OpMode{
 
         telemetry.addData("Slide Motor 1 Pos: ", elevator.getMotors()[0].getCurrentPosition());
         telemetry.addData("Slide Motor 2 Pos: ", elevator.getMotors()[1].getCurrentPosition());
+        telemetry.addData("mode", drive.getSlow_mode());
 
         telemetry.addData("Slide Power: ", gamepad2.right_stick_y);
         flipper.ShowPos();
