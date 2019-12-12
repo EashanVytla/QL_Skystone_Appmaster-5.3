@@ -191,7 +191,8 @@ public class QL_Auto_Skystone extends OpMode {
                         if (getStrafeDist() >= strafe * (17 / 28.5)) {
                             drive.setPower(0.0, 0.0, 0.0);
                             flag = false;
-                            newState(State.STATE_TURN);
+                            memo = getForwardDist();
+                            newState(State.STATE_INTAKE);
                         } else {
                             drive.setPower(0.0, 0.35, 0.0);
                         }
@@ -201,6 +202,7 @@ public class QL_Auto_Skystone extends OpMode {
                         if (getStrafeDist() <= strafe * (17 / 28.5)) {
                             drive.setPower(0.0, 0.0, 0.0);
                             flag = false;
+                            memo = getForwardDist();
                             newState(State.STATE_TURN);
                         } else {
                             drive.setPower(0.0, -0.35, 0.0);
@@ -215,13 +217,17 @@ public class QL_Auto_Skystone extends OpMode {
                     memo = getForwardDist();
                     newState(State.STATE_INTAKE);
                 } else {
-                    drive.setPower(0.0, 0.0, 0.2);
+                    drive.setPower(0.0, 0.0, 0.3);
                 }
                 drive.read(data);
                 break;
             case STATE_INTAKE:
-                intake.setPosition(0.7);
-                intake.setPower(0.3);
+                intake.setPower(0.5);
+                if (mStateTime.time() >= 2.5) {
+                    intake.close();
+                }else{
+                    intake.setPosition(0.7);
+                }
                 if (mStateTime.time() >= 0.5) {
                     if (getForwardDist() - memo >= drivein * (37.5 / 43)) {
                         drive.setPower(0.0, 0.0, 0.0);
@@ -231,13 +237,12 @@ public class QL_Auto_Skystone extends OpMode {
                         drive.setPower(0.0, 0.0, 0.0);
                         newState(State.STATE_BACK);
                     } else {
-                        drive.setPower(-0.2, 0.0, 0.0);
+                        drive.setPower(-0.3, 0.0, 0.0);
                     }
                 }
                 break;
             case STATE_BACK:
                 if (mStateTime.time() >= 0.5) {
-                    intake.close();
                     if (getForwardDist() - memo <= -(drivein - 7) * (37.5 / 43)) {
                         drive.setPower(0.0, 0.0, 0.0);
                         memo = getForwardDist();
@@ -279,13 +284,18 @@ public class QL_Auto_Skystone extends OpMode {
                 break;
             case STATE_TURN3:
                 if(mStateTime.time() >= 0.5){
-                    if (getangle() >= Math.PI) {
+                    if (Math.abs(getangle() - Math.PI) < Math.toRadians(turnCone)) {
+                        intake.setPower(0.0);
+                        drive.setPower(0.0, 0.0, 0.0);
+                        memo = getForwardDist();
+                        newState(State.STATE_DRIVE_TO_FOUNDATION);
+                    } else if(mStateTime.time() >= 2.0){
                         intake.setPower(0.0);
                         drive.setPower(0.0, 0.0, 0.0);
                         memo = getForwardDist();
                         newState(State.STATE_DRIVE_TO_FOUNDATION);
                     } else {
-                        drive.setPower(0.0, 0.0, 0.2);
+                        drive.targetTurn(Math.PI);
                     }
                     drive.read(data);
                 }
@@ -300,7 +310,7 @@ public class QL_Auto_Skystone extends OpMode {
                         newState(State.STATE_FLIP);
                     }
                     else{
-                        drive.setPower(0.3, 0.0, 0.0);
+                        drive.setPower(0.4, 0.0, 0.0);
                     }
                     telemetry.addData("Forward Dist: ", getForwardDist() - memo);
                 }
@@ -354,12 +364,15 @@ public class QL_Auto_Skystone extends OpMode {
             case STATE_TURN4:
                 if(mStateTime.time() >= 0.5){
                     drive.read(data);
-                    if (getangle() <= Math.PI/2){
+                    if (Math.abs(getangle() - Math.PI / 2) < Math.toRadians(turnCone)){
+                        drive.setPower(0.0, 0.0, 0.0);
+                        newState(State.STATE_RELEASE);
+                    }else if(mStateTime.time() >= 2.0){
                         drive.setPower(0.0, 0.0, 0.0);
                         newState(State.STATE_RELEASE);
                     }
                     else{
-                        drive.setPower(0.0, 0.0, -0.7);
+                        drive.targetTurnPlatform(Math.PI/2);
                     }
                 }
                 break;
@@ -370,23 +383,23 @@ public class QL_Auto_Skystone extends OpMode {
                 newState(State.STATE_PUSH_FOUNDATION);
                 break;
             case STATE_PUSH_FOUNDATION:
-                if (getForwardDist() - memo <= -12 * (37.5 / 43)) {
+                if (getForwardDist() - memo <= -20) {
                     drive.setPower(0.0, 0.0, 0.0);
                     memo = getStrafeDist();
                     newState(State.STATE_REPOSITION);
                 }
-                else if (mStateTime.time() >= 2.0){
+                else if (mStateTime.time() >= 1.0){
                     drive.setPower(0.0, 0.0, 0.0);
                     memo = getStrafeDist();
                     newState(State.STATE_REPOSITION);
                 }
                 else {
-                    drive.setPower(0.4, 0.0, 0.0);
+                    drive.setPower(0.6, 0.0, 0.0);
                 }
                 break;
             case STATE_REPOSITION:
                 drive.read(data);
-                if (getStrafeDist() - memo >= 1.0){
+                if (getStrafeDist() - memo >= 2.0){
                     drive.setPower(0.0, 0.0, 0.0);
                     memo = getForwardDist();
                     newState(State.STATE_RETURN);

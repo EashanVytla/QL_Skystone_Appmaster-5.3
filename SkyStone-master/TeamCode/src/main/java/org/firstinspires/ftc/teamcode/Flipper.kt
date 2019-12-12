@@ -36,14 +36,14 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
 
     companion object {
         var capped = false
-        const val case_right_turn_value = 0.775
-        const val case_left_turn_value = 0.15
-        const val case_center_turn_value = 0.5
+        const val case_right_turn_value = 0.795
+        const val case_left_turn_value = 0.17
+        const val case_center_turn_value = 0.52
 
         const val handshake_flip_position = 0.45 //THIS IS GOING BACKWARDS 1 -> 0
 
         const val turnPos_IDOL = 0.4935
-        const val flipperPos_IDOL = 0.945 //THIS IS GOING BACKWARDS 1 -> 0
+        const val flipperPos_IDOL = 0.975 //THIS IS GOING BACKWARDS 1 -> 0
         const val DepositPos_IDOL = 0.1 //THIS IS GOING BACKWARDS 1 -> 0
 
         const val DepositPos = 1.0

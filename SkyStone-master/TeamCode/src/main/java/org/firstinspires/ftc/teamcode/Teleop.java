@@ -86,7 +86,13 @@ public class Teleop extends OpMode{
         intake.read(hub2.getBulkInputData());
 
 
-        drive.drive(gamepad1, gamepad2);
+        if (gamepad1 != null && gamepad2 != null) {
+            drive.drive(gamepad1, gamepad2);
+        }
+        else{
+            drive.setPower(0.0, 0.0, 0.0);
+            drive.write();
+        }
 
         elevator.operate(gamepad2);
         intake.operate(gamepad1, gamepad2);

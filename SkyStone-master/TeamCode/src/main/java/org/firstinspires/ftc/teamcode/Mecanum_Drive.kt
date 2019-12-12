@@ -254,7 +254,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
             slow_mode = false
         }
 
-        if (isPress2(gamepad2.dpad_left, previous4) && !Flipper.capped){
+        /*if (isPress2(gamepad2.dpad_left, previous4) && !Flipper.capped){
             automateLock = !automateLock
             if (automateLock){
                 newState(State.STATE_STRAFE)
@@ -262,7 +262,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
             else{
                 newState(State.STATE_IDLE)
             }
-        }
+        }*/
 
         previous2 = gamepad2.x
         previous3 = gamepad2.b
