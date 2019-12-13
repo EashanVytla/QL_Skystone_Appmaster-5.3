@@ -92,7 +92,7 @@ public class QL_Auto_Skystone extends OpMode {
         leftWheel = new Dead_Wheel(new MA3_Encoder("a3", hardwareMap, 0.495));
         rightWheel = new Dead_Wheel(new MA3_Encoder("a4", hardwareMap, 1.365));
         strafeWheel = new Dead_Wheel(new MA3_Encoder("a1", hardwareMap, 2.464));
-        drive = new Mecanum_Drive(hardwareMap);
+        drive = new Mecanum_Drive(hardwareMap, telemetry);
         flip = new Flipper(hardwareMap, telemetry);
         flip.initialize();
 
@@ -222,7 +222,7 @@ public class QL_Auto_Skystone extends OpMode {
                 drive.read(data);
                 break;
             case STATE_INTAKE:
-                intake.setPower(0.5);
+                intake.setPower(0.3);
                 if (mStateTime.time() >= 2.5) {
                     intake.close();
                 }else{
@@ -237,7 +237,7 @@ public class QL_Auto_Skystone extends OpMode {
                         drive.setPower(0.0, 0.0, 0.0);
                         newState(State.STATE_BACK);
                     } else {
-                        drive.setPower(-0.3, 0.0, 0.0);
+                        drive.setPower(-0.2, 0.0, 0.0);
                     }
                 }
                 break;

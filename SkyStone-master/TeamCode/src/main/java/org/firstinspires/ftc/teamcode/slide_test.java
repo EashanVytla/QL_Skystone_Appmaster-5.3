@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -7,6 +8,7 @@ import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.RevExtensions2;
 
 @TeleOp(name = "Slide Test", group = "Slides")
+@Disabled
 public class slide_test extends OpMode {
     private Vertical_Elevator elevator;
 

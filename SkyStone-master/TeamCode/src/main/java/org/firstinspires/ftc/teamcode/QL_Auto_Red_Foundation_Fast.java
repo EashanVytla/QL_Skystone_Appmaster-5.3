@@ -8,7 +8,7 @@ import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.RevBulkData;
 import org.openftc.revextensions2.RevExtensions2;
 
-@Autonomous(name = "Red Foundation Fast", group = "Auto")
+@Autonomous(name = "Red Foundation", group = "Auto")
 public class QL_Auto_Red_Foundation_Fast extends OpMode {
     Dead_Wheel leftWheel;
     Dead_Wheel rightWheel;
@@ -39,6 +39,7 @@ public class QL_Auto_Red_Foundation_Fast extends OpMode {
         STATE_AUTOALLIGN,
         STATE_MICROSTRAFE,
         STATE_STRAFE1,
+        STATE_INITRAMP,
         STATE_LEAVEPLTFRM
     }
 
@@ -61,7 +62,7 @@ public class QL_Auto_Red_Foundation_Fast extends OpMode {
         leftWheel = new Dead_Wheel(new MA3_Encoder("a3", hardwareMap, 0.495));
         rightWheel = new Dead_Wheel(new MA3_Encoder("a4", hardwareMap, 1.365));
         strafeWheel = new Dead_Wheel(new MA3_Encoder("a1", hardwareMap, 2.464));
-        drive = new Mecanum_Drive(hardwareMap);
+        drive = new Mecanum_Drive(hardwareMap, telemetry);
         flip = new Flipper(hardwareMap, telemetry);
         intake = new Intake(hardwareMap);
 
@@ -204,17 +205,24 @@ public class QL_Auto_Red_Foundation_Fast extends OpMode {
                 if (getStrafeDist() - memo < -12.0){
                     drive.setPower(0.0, 0.0, 0.0);
                     memo = getForwardDist();
-                    newState(State.STATE_AUTOALLIGN);
+                    newState(State.STATE_INITRAMP);
                 }
                 else if(mStateTime.time() >= 2.0){
                     drive.setPower(0.0, 0.0, 0.0);
                     memo = getForwardDist();
-                    newState(State.STATE_AUTOALLIGN);
+                    newState(State.STATE_INITRAMP);
                 }
                 else{
                     drive.setPower(0.0, -0.3, 0.0);
                 }
                 telemetry.addData("Strafe Dist: ", getStrafeDist() - memo);
+                break;
+            case STATE_INITRAMP:
+                intake.open();
+                flip.start();
+                if(mStateTime.time() >= 2.0){
+                    newState(State.STATE_AUTOALLIGN);
+                }
                 break;
             case STATE_AUTOALLIGN:
                 if(mStateTime.time() >= 0.5){
@@ -236,6 +244,7 @@ public class QL_Auto_Red_Foundation_Fast extends OpMode {
             case STATE_PARK:
                 if (getForwardDist() - memo > 33){
                     drive.setPower(0.0, 0.0, 0.0);
+                    intake.close();
                     memo = getStrafeDist();
                     newState(State.STATE_MICROSTRAFE);
                 }

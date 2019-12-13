@@ -9,6 +9,8 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.Range
+import org.firstinspires.ftc.robotcontroller.external.samples.ConceptRampMotorSpeed
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation
 import org.firstinspires.ftc.teamcode.Universal.Math.Pose
 import org.firstinspires.ftc.teamcode.Universal.Math.Vector2
@@ -18,9 +20,8 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.*
 
-class Mecanum_Drive(hardwareMap : HardwareMap){
+class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var motors = ArrayList<Caching_Motor>()
-
     var strafeWheel = Dead_Wheel(MA3_Encoder( "a1", hardwareMap, 2.464))
 
     var prev_pos = ArrayList<Double>()
@@ -43,7 +44,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
     var headingAccessCount = 0
     val headingUpdateFrequency = 0.1
 
-    var angle: Double = 0.toDouble()
+    var angle = 0.0
+    //var angle: Double = 0.toDouble()
     var prevheading = 0.0
     var slowmode2 = false
 
@@ -54,6 +56,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
     var time = ElapsedTime()
 
     var scale = 1.0
+    var slow_mode3 = false
 
     var orientation : Orientation
     var fine_tune = 1.0
@@ -65,11 +68,13 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
 
     var mode = false
 
-    var headingerror: Double = 0.toDouble()
+    var headingerror = 0.0
+    //var headingerror: Double = 0.toDouble()
 
     var headingLock = false
 
     var automateLock = false
+    var flipper : Flipper
 
     enum class State{
         STATE_STRAFE,
@@ -117,6 +122,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
 
         val data = hub.bulkInputData
         strafeWheel.encoder.calibrate(data)
+
+        flipper = Flipper(hardwareMap, telemetry)
     }
 
     fun newState(s : State){
@@ -241,9 +248,22 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
         setPower(drive.y, drive.x, Range.clip(power, -1.0, 1.0))
     }
 
+    fun scalePower(speed: Double) : Double{
+        //return 0.5 * Math.pow(2 * (speed - 0.5), 3.0) + 0.5
+        /*
+        if(speed != 0.0){
+            return Math.pow(speed, 3.0)/Math.abs(speed)
+        }else {
+            return 0.0
+        }
+         */
+        return speed
+    }
+
     fun isPress2(value : Boolean, previous : Boolean) : Boolean{
         return value && !previous
     }
+
 
     fun drive(gamepad : Gamepad, gamepad2: Gamepad){
         slowmode2 = gamepad.right_trigger > 0.0
@@ -252,9 +272,14 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
             slow_mode = true
         }else if(isPress2(gamepad2.b, previous3)){
             slow_mode = false
+        }else if(flipper.grabbed){
+            slow_mode3 = true
+        }else if(flipper.grabbed == false){
+            slow_mode3 = false
         }
 
-        /*if (isPress2(gamepad2.dpad_left, previous4) && !Flipper.capped){
+        /*
+        if (isPress2(gamepad2.dpad_left, previous4) && !Flipper.capped){
             automateLock = !automateLock
             if (automateLock){
                 newState(State.STATE_STRAFE)
@@ -262,7 +287,11 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
             else{
                 newState(State.STATE_IDLE)
             }
-        }*/
+        }
+
+         */
+
+
 
         previous2 = gamepad2.x
         previous3 = gamepad2.b
@@ -270,13 +299,14 @@ class Mecanum_Drive(hardwareMap : HardwareMap){
 
         if (slow_mode || slowmode2){
             fine_tune = 0.5
-        }
-        else{
+        }else if(slow_mode3){
+            fine_tune = 0.3
+        } else{
             fine_tune = 0.9
         }
 
         if (!automateLock) {
-            setPower(fine_tune * gamepad.left_stick_y.toDouble(), fine_tune * gamepad.left_stick_x.toDouble(), -0.5 * gamepad.right_stick_x.toDouble())
+            setPower(fine_tune * scalePower(gamepad.left_stick_y.toDouble()), fine_tune * scalePower(gamepad.left_stick_x.toDouble()), -0.5 * gamepad.right_stick_x.toDouble())
         }
         else{
             capstoneStrafe()

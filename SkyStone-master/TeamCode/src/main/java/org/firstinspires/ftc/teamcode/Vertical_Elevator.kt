@@ -286,8 +286,5 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         }*/
         write()
         telemetry.addData("Level:", stack_count)
-        telemetry.addData("Height: ", getLiftHeight())
-        telemetry.addData("Slide Motor 1 Target: ", target)
-        telemetry.addData("Slide Motor 2 Target: ", target)
     }
 }

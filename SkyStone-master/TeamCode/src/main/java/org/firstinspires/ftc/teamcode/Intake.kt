@@ -15,6 +15,7 @@ class Intake(hardwareMap: HardwareMap) {
     var write_index = 0
     val open : Array<Caching_Servo>
     var time = ElapsedTime()
+    var prevtime = 0.0
 
     init{
         motors = arrayOf(Caching_Motor(hardwareMap, "intake_left"), Caching_Motor(hardwareMap, "intake_right"))
@@ -28,7 +29,8 @@ class Intake(hardwareMap: HardwareMap) {
 
     enum class clamp{
         OPEN,
-        CLOSE
+        CLOSE,
+        IDOL,
     }
 
     var clampst = clamp.CLOSE
@@ -72,7 +74,7 @@ class Intake(hardwareMap: HardwareMap) {
     }
 
     fun close(){
-        open[0].setPosition(0.75) //0.7
+        open[0].setPosition(0.7) //0.7
         open[1].setPosition(0.25) //0.2
     }
 
@@ -84,23 +86,28 @@ class Intake(hardwareMap: HardwareMap) {
     fun operate(g1 : Gamepad, g2: Gamepad){
         setPower((0.35 * g1.right_trigger) - (0.2 * g1.left_trigger))
 
-        if(g2.left_bumper|| g2.left_trigger > 0.5 || g2.right_trigger > 0.5){
+        if(g2.left_bumper){
             newState(clamp.OPEN)
         }
-
         if(g1.left_bumper){
-            open()
-        }else{
-            close()
+            newState(clamp.IDOL)
         }
 
+
         if(clampst == clamp.OPEN){
-            if (time.time() >= 5.0){
-                close()
-            }
-            else{
+            if (time.time() <= 4.0){
                 open()
             }
+            else{
+                clampst = clamp.IDOL
+            }
+        }else if(clampst == clamp.IDOL){
+            if(g1.left_bumper){
+                open()
+            }else{
+                close()
+            }
+
         }
 
         write()

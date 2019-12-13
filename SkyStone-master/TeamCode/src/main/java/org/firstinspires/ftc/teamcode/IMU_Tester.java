@@ -19,7 +19,7 @@ public class IMU_Tester extends OpMode {
         hub = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 2");
         hub2 = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 1");
 
-        drive = new Mecanum_Drive(hardwareMap);
+        drive = new Mecanum_Drive(hardwareMap, telemetry);
     }
 
     public void loop(){

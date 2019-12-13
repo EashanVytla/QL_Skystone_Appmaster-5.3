@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,6 +14,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name = "Mecanum Optimization Test", group = "REV Optimized")
+@Disabled
 public class mecanum_test extends OpMode {
     private Mecanum_Drive drive;
     private ExpansionHubEx hub;
@@ -23,7 +25,7 @@ public class mecanum_test extends OpMode {
     public void init(){
         RevExtensions2.init();
 
-        drive = new Mecanum_Drive(hardwareMap);
+        drive = new Mecanum_Drive(hardwareMap, telemetry);
         hub = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 2");
         hub2 = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 1");
     }

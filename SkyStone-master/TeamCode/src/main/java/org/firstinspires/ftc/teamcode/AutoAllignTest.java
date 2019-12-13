@@ -11,6 +11,7 @@ import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.RevExtensions2;
 
 @TeleOp(name = "autoalligntest", group = "proto")
+@Disabled
 public class AutoAllignTest extends OpMode {
     double headingerror;
     double kpA = 1.0; //FINAL Regular turn: 0.39
@@ -37,7 +38,7 @@ public class AutoAllignTest extends OpMode {
         hub = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 2");
         hub2 = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 1");
 
-        drive = new Mecanum_Drive(hardwareMap);
+        drive = new Mecanum_Drive(hardwareMap, telemetry);
 
         flip = new Flipper(hardwareMap, telemetry);
         intake = new Intake(hardwareMap);

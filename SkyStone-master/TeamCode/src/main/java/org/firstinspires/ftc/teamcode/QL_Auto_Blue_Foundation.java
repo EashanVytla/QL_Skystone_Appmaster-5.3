@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -9,6 +10,7 @@ import org.openftc.revextensions2.RevBulkData;
 import org.openftc.revextensions2.RevExtensions2;
 
 @Autonomous(name = "QL_Auto_Foundation_BLUE")
+@Disabled
 public class QL_Auto_Blue_Foundation extends OpMode {
     Dead_Wheel leftWheel;
     Dead_Wheel rightWheel;
@@ -55,7 +57,7 @@ public class QL_Auto_Blue_Foundation extends OpMode {
         leftWheel = new Dead_Wheel(new MA3_Encoder("a3", hardwareMap, 0.495));
         rightWheel = new Dead_Wheel(new MA3_Encoder("a4", hardwareMap, 1.365));
         strafeWheel = new Dead_Wheel(new MA3_Encoder("a1", hardwareMap, 2.464));
-        drive = new Mecanum_Drive(hardwareMap);
+        drive = new Mecanum_Drive(hardwareMap, telemetry);
         flip = new Flipper(hardwareMap, telemetry);
 
         rightWheel.getEncoder().reverse();

@@ -40,12 +40,12 @@ public class Teleop extends OpMode{
         hub = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 2");
         hub2 = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 1");
 
-        drive = new Mecanum_Drive(hardwareMap);
+        drive = new Mecanum_Drive(hardwareMap, telemetry);
         elevator = new Vertical_Elevator(hardwareMap, telemetry);
         intake = new Intake(hardwareMap);
         //grabber = new GrabberV2(hardwareMap);
         flipper = new Flipper(hardwareMap, telemetry);
-        //tape = new Tape_Extention(hardwareMap);
+        tape = new Tape_Extention(hardwareMap);
 
         //grabber.initialize();
         //flipper.initialize();
@@ -81,10 +81,7 @@ public class Teleop extends OpMode{
     }
 
     public void loop(){
-        drive.read(hub.getBulkInputData());
         elevator.read(hub2.getBulkInputData());
-        intake.read(hub2.getBulkInputData());
-
 
         if (gamepad1 != null && gamepad2 != null) {
             drive.drive(gamepad1, gamepad2);
@@ -98,50 +95,44 @@ public class Teleop extends OpMode{
         intake.operate(gamepad1, gamepad2);
         //grabber.operate(gamepad2);
         flipper.operate(gamepad1, gamepad2);
-        //tape.operate(gamepad1);
+        tape.operate(gamepad2);
         //telemetry.addData("DRIVETRAIN MODE", (mode ? "Field Centric" : "Robot Centric"));
         telemetry.addData("DRIVETRAIN MODE", (drive.getMode() ? "Slow Mode" : "Regular Speed"));
-        telemetry.addData("IMU", drive.angleWrap(drive.getExternalHeading()));
 
-        telemetry.addData("Angle: ", drive.getExternalHeading());
+        //telemetry.addData("1mAngle: ", drive.getExternalHeading());
 
         Vector2 v = new Vector2(gamepad1.left_stick_x, gamepad1.left_stick_y);
         v.rotate(-drive.getExternalHeading());
 
-        telemetry.addData("Slide Error: ", elevator.getError());
+        //telemetry.addData("Slide Error: ", elevator.getError());
 
         telemetry.addData("Case: ", flipper.getRcase());
-        telemetry.addData("Is Dropped: ", elevator.isDropped());
 
-        telemetry.addData("Boundry Condition", elevator.getBoundaryConditions());
+        //telemetry.addData("Boundry Condition", elevator.getBoundaryConditions());
 
-        telemetry.addData("Drive Vector: ", v.toString());
+        //telemetry.addData("Drive Vector: ", v.toString());
 
-        telemetry.addData("Intake Left Motor Power", intake.getMotors()[0].getMotor().getPower());
-        telemetry.addData("Intake Right Motor Power", intake.getMotors()[1].getMotor().getPower());
+        //telemetry.addData("Intake Left Motor Power", intake.getMotors()[0].getMotor().getPower());
+        //telemetry.addData("Intake Right Motor Power", intake.getMotors()[1].getMotor().getPower());
 
-        telemetry.addData("Intake Left prev power", intake.getMotors()[0].getPrev_power());
-        telemetry.addData("Intake Right prev power", intake.getMotors()[1].getPrev_power());
+        //telemetry.addData("Intake Left prev power", intake.getMotors()[0].getPrev_power());
+        //telemetry.addData("Intake Right prev power", intake.getMotors()[1].getPrev_power());
 
-        telemetry.addData("Up Left Power: ", drive.getMotors().get(0).getPrev_power());
-        telemetry.addData("Back Left Power: ", drive.getMotors().get(1).getPrev_power());
-        telemetry.addData("Back Right Power: ", drive.getMotors().get(2).getPrev_power());
-        telemetry.addData("Up Right Power: ", drive.getMotors().get(3).getPrev_power());
+        //telemetry.addData("Up Left Power: ", drive.getMotors().get(0).getPrev_power());
+        //telemetry.addData("Back Left Power: ", drive.getMotors().get(1).getPrev_power());
+        //telemetry.addData("Back Right Power: ", drive.getMotors().get(2).getPrev_power());
+        //telemetry.addData("Up Right Power: ", drive.getMotors().get(3).getPrev_power());
 
-        telemetry.addData("Refresh Rate: ", (System.currentTimeMillis() - prev_time));
-        prev_time = System.currentTimeMillis();
-        telemetry.addData("Write Frequency: 1 /", drive.getRefreshRate());
-        telemetry.addData("Up Left: ", drive.getMotors().get(0).getCurrentPosition());
-        telemetry.addData("Back Left: ", drive.getMotors().get(1).getCurrentPosition());
-        telemetry.addData("Back Right: ", drive.getMotors().get(2).getCurrentPosition());
-        telemetry.addData("Up Right: ", drive.getMotors().get(3).getCurrentPosition());
+        //telemetry.addData("Refresh Rate: ", (System.currentTimeMillis() - prev_time));
+        //prev_time = System.currentTimeMillis();
+        //telemetry.addData("Write Frequency: 1 /", drive.getRefreshRate());
 
-        telemetry.addData("Slide Motor 1 Pos: ", elevator.getMotors()[0].getCurrentPosition());
-        telemetry.addData("Slide Motor 2 Pos: ", elevator.getMotors()[1].getCurrentPosition());
-        telemetry.addData("mode", drive.getSlow_mode());
+        //telemetry.addData("Slide Motor 1 Pos: ", elevator.getMotors()[0].getCurrentPosition());
+        //telemetry.addData("Slide Motor 2 Pos: ", elevator.getMotors()[1].getCurrentPosition());
+
 
         telemetry.addData("Slide Power: ", gamepad2.right_stick_y);
-        flipper.ShowPos();
+        //flipper.ShowPos();
     }
 
     private double getForwardDist(){
