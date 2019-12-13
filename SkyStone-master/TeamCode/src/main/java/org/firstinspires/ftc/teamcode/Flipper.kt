@@ -113,7 +113,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         deposit.setPosition(DepositPos_IDOL)
         time.startTime()
         flipper.setPosition(flipperPos_IDOL)
-        capClamp.setPosition(0.7)
+        capClamp.setPosition(1.0)
         capDeposit.setPosition(0.0)
         write()
     }
@@ -124,7 +124,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         turn.setPosition(turnPos_IDOL)
         leftpm.setPosition(0.3)
         rightpm.setPosition(0.65)
-        capClamp.setPosition(0.7)
+        capClamp.setPosition(1.0)
         capDeposit.setPosition(0.0)
         write()
     }
@@ -197,10 +197,12 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         return clicked && !previous
     }
 
+
     fun clampcap(){
-        capClamp.setPosition(0.65)
+        capClamp.setPosition(1.0)
         write()
     }
+
 
     fun operate(g1: Gamepad, g2 : Gamepad){
             if(g1.right_bumper){
@@ -236,10 +238,10 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
 
             if(isPress(g2.dpad_right, previousclamp)){
                 if(!clamped){
-                    capClamp.setPosition(0.65)
+                    capClamp.setPosition(1.0)
                     clamped = true
                 }else{
-                    capClamp.setPosition(0.4)
+                    capClamp.setPosition(0.9)
                     clamped = false
                 }
             }

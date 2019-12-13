@@ -10,6 +10,7 @@ import org.openftc.revextensions2.RevExtensions2;
 
 @Autonomous(name = "QL_Auto_Safe", group = "Competition")
 public class QL_SAFE_RED extends OpMode {
+    /*
     Dead_Wheel leftWheel;
     Dead_Wheel rightWheel;
     Dead_Wheel strafeWheel;
@@ -17,14 +18,17 @@ public class QL_SAFE_RED extends OpMode {
     Mecanum_Drive drive;
 
     Flipper flip;
-    Intake intake;
+
 
     private ExpansionHubEx hub;
     private ExpansionHubEx hub2;
-
+    */
     ElapsedTime mStateTime;
+    Intake intake;
 
     public void init(){
+        //todo: IDK why I have this but it might be necessary if we need to add movement so don't delete it
+        /*
         RevExtensions2.init();
         hub = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 2");
         hub2 = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 1");
@@ -34,7 +38,7 @@ public class QL_SAFE_RED extends OpMode {
         strafeWheel = new Dead_Wheel(new MA3_Encoder("a1", hardwareMap, 2.464));
         drive = new Mecanum_Drive(hardwareMap, telemetry);
         flip = new Flipper(hardwareMap, telemetry);
-        intake = new Intake(hardwareMap);
+
 
         mStateTime = new ElapsedTime();
 
@@ -48,21 +52,17 @@ public class QL_SAFE_RED extends OpMode {
         leftWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237); //1.5144 0.0361262
         rightWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237); //1.5204 -0.00305571
         strafeWheel.setBehavior(1.53642 * 2 * 0.797, 0.0); //1.50608 -0.221642
-    }
 
-    @Override
-    public void start(){
+         */
+        intake = new Intake(hardwareMap);
     }
 
     public void loop(){
-        RevBulkData data = hub.getBulkInputData();
-        RevBulkData data2 = hub2.getBulkInputData();
-
-        flip.read();
-
-        leftWheel.update(data);
-
-
-        intake.kickout();
+        if(mStateTime.time() >= 5.0){
+            intake.setPower(0.0);
+        }else{
+            intake.kickout();
+        }
+        intake.write();
     }
 }

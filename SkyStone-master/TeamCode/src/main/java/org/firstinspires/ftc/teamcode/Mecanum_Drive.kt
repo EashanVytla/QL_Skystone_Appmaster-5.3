@@ -64,6 +64,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var previous = false
     var previous2 = false
     var previous3 = false
+    var previous4 = false
+    var previous5 = false
     var slow_mode = false
 
     var mode = false
@@ -84,8 +86,6 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var state = State.STATE_IDLE
 
     var mStateTime = ElapsedTime()
-
-    var previous4 = false
 
     companion object{
         var refresh_rate = 0.5  //ngl this is kinda scary but you do what u gotta do to get 300 hz
@@ -272,10 +272,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             slow_mode = true
         }else if(isPress2(gamepad2.b, previous3)){
             slow_mode = false
-        }else if(flipper.grabbed){
-            slow_mode3 = true
-        }else if(flipper.grabbed == false){
-            slow_mode3 = false
+        }else if(isPress2(gamepad.a, previous5)){
+            slow_mode3 = !slow_mode3
         }
 
         /*
@@ -296,6 +294,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         previous2 = gamepad2.x
         previous3 = gamepad2.b
         previous4 = gamepad2.dpad_left
+        previous5 = gamepad.a
 
         if (slow_mode || slowmode2){
             fine_tune = 0.5

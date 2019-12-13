@@ -40,6 +40,7 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
         STATE_AUTOALLIGN,
         STATE_MICROSTRAFE,
         STATE_STRAFE1,
+        STATE_INITRAMP,
         STATE_LEAVEPLTFRM
     }
 
@@ -215,6 +216,13 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
                     drive.setPower(0.0, 0.3, 0.0);
                 }
                 telemetry.addData("Strafe Dist: ", getStrafeDist() - memo);
+                break;
+            case STATE_INITRAMP:
+                intake.open();
+                flip.start();
+                if(mStateTime.time() >= 2.0){
+                    newState(State.STATE_AUTOALLIGN);
+                }
                 break;
             case STATE_AUTOALLIGN:
                 if(mStateTime.time() >= 0.5){
