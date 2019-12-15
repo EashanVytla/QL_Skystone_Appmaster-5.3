@@ -81,7 +81,11 @@ public class Teleop extends OpMode{
     }
 
     public void loop(){
-        elevator.read(hub2.getBulkInputData());
+        RevBulkData data = hub2.getBulkInputData();
+
+        if (data != null){
+            elevator.read(data);
+        }
 
         if (gamepad1 != null && gamepad2 != null) {
             drive.drive(gamepad1, gamepad2);

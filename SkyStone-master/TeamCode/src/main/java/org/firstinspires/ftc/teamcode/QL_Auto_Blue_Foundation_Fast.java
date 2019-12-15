@@ -205,12 +205,12 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
                 if (getStrafeDist() - memo < -12.0){
                     drive.setPower(0.0, 0.0, 0.0);
                     memo = getForwardDist();
-                    newState(State.STATE_AUTOALLIGN);
+                    newState(State.STATE_INITRAMP);
                 }
                 else if(mStateTime.time() >= 2.0){
                     drive.setPower(0.0, 0.0, 0.0);
                     memo = getForwardDist();
-                    newState(State.STATE_AUTOALLIGN);
+                    newState(State.STATE_INITRAMP);
                 }
                 else{
                     drive.setPower(0.0, 0.3, 0.0);
@@ -221,6 +221,7 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
                 intake.open();
                 flip.start();
                 if(mStateTime.time() >= 2.0){
+                    flip.clamp();
                     newState(State.STATE_AUTOALLIGN);
                 }
                 break;
@@ -245,10 +246,11 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
                 if (getForwardDist() - memo > 33){
                     drive.setPower(0.0, 0.0, 0.0);
                     memo = getStrafeDist();
+                    intake.close();
                     newState(State.STATE_MICROSTRAFE);
                 }
                 else{
-                    drive.setPower(-0.2, 0.0, 0.0);
+                    drive.setPower(-0.4, 0.0, 0.0);
                 }
                 telemetry.addData("Forward Dist: ", getForwardDist() - memo);
                 break;
