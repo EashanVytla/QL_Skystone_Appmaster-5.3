@@ -143,7 +143,8 @@ public class QL_Auto_Red_Foundation extends OpMode {
                     drive.setPower(0.0, 0.0, 0.0);
                 }
                 else{
-                    drive.setPower(0.0, 0.0, -0.3);
+                    drive.setPower(0.0, 0.0, -0.3
+                    );
                 }
                 break;
             case STATE_PUSH_BACK:

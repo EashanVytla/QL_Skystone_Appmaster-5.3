@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.Range
-import org.firstinspires.ftc.robotcontroller.external.samples.ConceptRampMotorSpeed
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation
 import org.firstinspires.ftc.teamcode.Universal.Math.Pose
@@ -22,13 +21,18 @@ import kotlin.math.*
 
 class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var motors = ArrayList<Caching_Motor>()
-    var strafeWheel = Dead_Wheel(MA3_Encoder( "a1", hardwareMap, 2.464))
+
+    var leftWheel: Dead_Wheel
+    var rightWheel: Dead_Wheel
+    var strafeWheel: Dead_Wheel
+    var theta = 0.0
 
     var prev_pos = ArrayList<Double>()
     var prev_heading = 0.0
 
     val imu : LynxEmbeddedIMU
     val hub : ExpansionHubEx
+    val hub2 : ExpansionHubEx
 
     var currentWriteIndex = 0
 
@@ -68,6 +72,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var previous5 = false
     var slow_mode = false
 
+    //var pid: PID
+
     var mode = false
 
     var headingerror = 0.0
@@ -76,16 +82,46 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var headingLock = false
 
     var automateLock = false
+    var automateLock2 = false
     var flipper : Flipper
+
+    //Rotational straight line coefficients
+    val kpr = 0.9
+    val kir = 0.0
+    val kdr = 0.0
+
+    //Rotational STRAFE coefficients
+    val kprs = 0.6
+
+    //Straight Line Coefficients
+    val kpstr = 0.055 //.0625 //0.055 //0.02 //0.1
+    val kistr = 0.0 //0.002 //0.0
+    val kdstr = 5.0 //4.0 //0.2
+
+    var preverror = 0.0
+    var preverrorstr = 0.0
+    var error = 0.0
+    var drifterror = 0.0
+    var integralEstraight = 0.0
+    var integralEdrift = 0.0
+    var targetangle = 0.0
 
     enum class State{
         STATE_STRAFE,
         STATE_IDLE
     }
 
+    enum class AutoAllignSt{
+        STATE_TURN,
+        STATE_STRAFE,
+        STATE_IDLE
+    }
+
     var state = State.STATE_IDLE
+    var aastate = AutoAllignSt.STATE_IDLE
 
     var mStateTime = ElapsedTime()
+    var angleOffset = 0.0
 
     companion object{
         var refresh_rate = 0.5  //ngl this is kinda scary but you do what u gotta do to get 300 hz
@@ -96,14 +132,43 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         const val kp = 1.0
     }
 
+    var data : RevBulkData
+    var data2 : RevBulkData
+
     init{
         motors.add(Caching_Motor(hardwareMap, "up_left"))
         motors.add(Caching_Motor(hardwareMap, "back_left"))
         motors.add(Caching_Motor(hardwareMap, "back_right"))
         motors.add(Caching_Motor(hardwareMap, "up_right"))
 
-        strafeWheel.encoder.reverse()
-        strafeWheel.setBehavior(1.53642 * 2.0 * 0.797, 0.0) //1.50608 -0.221642
+        //pid = PID(hardwareMap, telemetry)
+
+        leftWheel = Dead_Wheel(MA3_Encoder("a3", hardwareMap, 0.495))
+        rightWheel = Dead_Wheel(MA3_Encoder("a4", hardwareMap, 1.365))
+        strafeWheel = Dead_Wheel(MA3_Encoder("a1", hardwareMap, 2.464))
+
+        hub = hardwareMap.get(ExpansionHubEx::class.java, "Expansion Hub 2")
+        hub2 = hardwareMap.get(ExpansionHubEx::class.java, "Expansion Hub 1")
+
+        data = hub.bulkInputData
+        data2 = hub2.bulkInputData
+        leftWheel.encoder.calibrate(data)
+        rightWheel.encoder.calibrate(data2)
+        strafeWheel.encoder.calibrate(data)
+
+        /*
+        leftWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237) //1.5144 0.0361262
+        rightWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237) //1.5204 -0.00305571
+        strafeWheel.setBehavior(1.53642 * 2 * 0.797, 0.0) //1.50608 -0.221642
+
+         */
+
+        leftWheel.setBehavior(1.5385, -0.319237) //1.5144 0.0361262
+
+        rightWheel.setBehavior(1.5385, -0.319237) //1.5204 -0.00305571
+
+        strafeWheel.setBehavior(1.53642, 0.0) //1.50608 -0.221642
+
 
         motors.forEach {
             it.motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
@@ -112,16 +177,13 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         motors[0].motor.direction = DcMotorSimple.Direction.REVERSE
         motors[1].motor.direction = DcMotorSimple.Direction.REVERSE
 
-        hub = hardwareMap.get(ExpansionHubEx::class.java, "Expansion Hub 2")
         imu = LynxOptimizedI2cFactory.createLynxEmbeddedImu(hub.standardModule, 0)
         val parameters = BNO055IMU.Parameters()
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS
         imu.initialize(parameters)
         orientation = imu.angularOrientation
         time.startTime()
-
-        val data = hub.bulkInputData
-        strafeWheel.encoder.calibrate(data)
+        leftWheel.encoder.reverse()
 
         flipper = Flipper(hardwareMap, telemetry)
     }
@@ -162,6 +224,10 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         return arrayOf(motors[0].prev_power, motors[1].prev_power, motors[2].prev_power, motors[3].prev_power)
     }
 
+    fun getOverallPower() : Double{
+        return (motors[0].motor.power + motors[1].motor.power + motors[2].motor.power + motors[3].motor.power)/4
+    }
+
     fun pivotTo(heading : Double, fPower : Double) : Boolean{
         val error = heading - getExternalHeading()
         val power = kpA * error * 0.5
@@ -175,79 +241,6 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         }
     }
 
-    fun targetTurn(targetAngle : Double){
-        dt = (System.currentTimeMillis() - prev_time).toDouble()
-        prev_time = System.currentTimeMillis()
-        angle = angleWrap(getExternalHeading())
-        headingerror = targetAngle - angle
-
-        if (abs(headingerror) > Math.toRadians(180.0)){
-            if (headingerror > 0) {
-                headingerror = -((Math.PI * 2) - abs(headingerror))
-            }
-            else{
-                headingerror = ((Math.PI * 2) - abs(headingerror))
-            }
-        }
-
-        val prop = headingerror * kpA
-        val integral = integralError * kiA
-        val deriv = (headingerror - prevheading) * kdA / dt
-
-        val power = prop + integral + deriv
-        if (Math.abs(power) < 0.3) {
-            integralError += headingerror
-        }
-        prevheading = headingerror
-
-        setPower(0.0, 0.0, Range.clip(power, -1.0, 1.0))
-        //write()
-    }
-
-    fun targetTurnPlatform(targetAngle : Double){
-        dt = (System.currentTimeMillis() - prev_time).toDouble()
-        prev_time = System.currentTimeMillis()
-        angle = angleWrap(getExternalHeading())
-        headingerror = targetAngle - angle
-
-        if (abs(headingerror) > Math.toRadians(180.0)){
-            if (headingerror > 0) {
-                headingerror = -((Math.PI * 2) - abs(headingerror))
-            }
-            else{
-                headingerror = ((Math.PI * 2) - abs(headingerror))
-            }
-        }
-
-        val prop = headingerror * kp
-        val power = prop
-        if (Math.abs(power) < 0.3) {
-            integralError += headingerror
-        }
-        prevheading = headingerror
-
-        setPower(0.0, 0.0, Range.clip(power, -1.0, 1.0))
-    }
-
-    fun targetTurn(drive : Vector2d, targetAngle : Double){
-        dt = (System.currentTimeMillis() - prev_time).toDouble()
-        prev_time = System.currentTimeMillis()
-        angle = angleWrap(getExternalHeading())
-        headingerror = targetAngle - angle
-
-        val prop = headingerror * kpA
-        val integral = integralError * kiA
-        val deriv = (headingerror - prevheading) * kdA / dt
-
-        val power = prop + integral + deriv
-        if (Math.abs(power) < 0.3) {
-            integralError += headingerror
-        }
-        prevheading = headingerror
-
-        setPower(drive.y, drive.x, Range.clip(power, -1.0, 1.0))
-    }
-
     fun scalePower(speed: Double) : Double{
         //return 0.5 * Math.pow(2 * (speed - 0.5), 3.0) + 0.5
         /*
@@ -259,6 +252,21 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
          */
         return speed
     }
+
+    /*
+    fun autoAllign(state : AutoAllignSt, gamepad: Gamepad){
+        if(state == AutoAllignSt.STATE_IDLE){
+            setPower(fine_tune * scalePower(gamepad.left_stick_y.toDouble()), fine_tune * scalePower(gamepad.left_stick_x.toDouble()), -0.5 * gamepad.right_stick_x.toDouble())
+        }else if(state == AutoAllignSt.STATE_STRAFE){
+            setPower(0.0, gamepad.left_stick_y.toDouble(), 0.0)
+        }else if(state == AutoAllignSt.STATE_TURN){
+            if(time.time() >= 2.0){
+                targetTurn((Math.PI/2 - angleOffset))
+            }
+        }
+    }
+
+     */
 
     fun isPress2(value : Boolean, previous : Boolean) : Boolean{
         return value && !previous
@@ -289,7 +297,19 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
 
          */
 
+        /*
+        if (isPress2(gamepad2.x, previous2)){
+            automateLock2 = !automateLock2
+            autoAllign(AutoAllignSt.STATE_TURN, gamepad)
+            if (automateLock2){
+                autoAllign(AutoAllignSt.STATE_STRAFE, gamepad)
+            }
+            else{
+                autoAllign(AutoAllignSt.STATE_IDLE, gamepad)
+            }
+        }
 
+         */
 
         previous2 = gamepad2.x
         previous3 = gamepad2.b
@@ -330,11 +350,6 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             }
         }
     }
-
-    private fun getStrafeDist(): Double {
-        return strafeWheel.getDistance() * 7.0 / 17.536
-    }
-
 
     fun toggleHeadingLock(){
         headingLock = !headingLock
@@ -391,7 +406,6 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     }
 
     fun setPower(y : Double, x : Double, rightX : Double){
-
         var FrontLeftVal = y - x + rightX
         var FrontRightVal = y + x - rightX
         var BackLeftVal = y + x + rightX
@@ -440,6 +454,144 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         //relativeOdometryUpdate(offset)
     }
 
+    private fun getForwardDist(): Double {
+        return leftWheel.getDistance() //* (23 / 37.678)
+    }
+
+    private fun getLeftDist() : Double {
+        return leftWheel.getDistance() //* (23 / 37.678)
+    }
+
+    private fun getRightDist() : Double{
+        return rightWheel.getDistance() //* (23 / 37.678)
+    }
+
+    private fun getStrafeDist(): Double {
+        return strafeWheel.getDistance() * 7.0 / 17.536
+    }
+
+    fun setPowerSide(left : Double, right : Double){
+        motors[0].setPower(left)
+        motors[1].setPower(left)
+        motors[2].setPower(right)
+        motors[3].setPower(right)
+    }
+
+    fun getTrackWidthAngle() : Double {
+        var arcError = getLeftDist() - getRightDist()
+        if(arcError/TRACK_WIDTH <= 1.0 && arcError/TRACK_WIDTH >= -1.0){
+            theta = Math.asin(arcError/TRACK_WIDTH)
+        }else{
+            theta = 0.0
+        }
+        return theta
+    }
+
+    fun strafe(target : Double, strafeDist : Double, speed: Double, telemetry: Telemetry){
+        val data = hub.bulkInputData
+        val data2 = hub2.bulkInputData
+
+        //pid.targetPosition = target
+        dt = (System.currentTimeMillis() - prev_time).toDouble()
+        prev_time = System.currentTimeMillis()
+
+        var Drifterror = getTrackWidthAngle()
+
+        //pid.targetPosition = target
+
+        val prop = Drifterror * kpr
+
+        val power = prop
+
+        leftWheel.update(data)
+        rightWheel.update(data2)
+        strafeWheel.update(data)
+        //todo: FIRST CHECK WHAT VALUES THIS IS GIVING. IF IT IS NOT CHANGING THEN JUST PASS IT IN!!!!
+
+        //drive.setPower(pid.update(-forwardDist), 0.0, Range.clip(power, -0.4, 0.4))
+        if(strafeDist >= target){
+            setPower(0.0, 0.0, 0.0)
+        }else{
+            if(Math.abs(getLeftDist() - getRightDist()) <= 2.0){
+                setPower(0.0, speed, Range.clip(-power, -0.5, 0.5))
+            }else{
+                setPower(0.0, speed, 0.0)
+            }
+        }
+
+        //drive.setPower(Range.clip(powerstr, -0.5, 0.5), 0.0, 0.0)
+
+        telemetry.addData("Left Wheel: ", getLeftDist())
+        telemetry.addData("Right Wheel: ", getRightDist())
+        telemetry.addData("Strafe Wheel: ", getStrafeDist())
+        telemetry.addData("Angle: ", getTrackWidthAngle())
+        telemetry.addData("Power", power)
+        telemetry.addData("Error: ", error)
+        write()
+    }
+
+    fun straight(target : Double, forwardDist : Double, telemetry: Telemetry){
+        val data = hub.bulkInputData
+        val data2 = hub2.bulkInputData
+
+        //pid.targetPosition = target
+        dt = (System.currentTimeMillis() - prev_time).toDouble()
+        prev_time = System.currentTimeMillis()
+        angle = angleWrap(getExternalHeading())
+        error = target - forwardDist
+
+
+        val propstr = error * kpstr
+        val integralstr = integralEstraight * kistr
+        val derivstr = kdstr * ((error - preverrorstr) / dt)
+
+        val powerstr = propstr + integralstr + derivstr
+        if (Math.abs(getOverallPower()) < 0.1) {
+            integralEstraight += error
+        }
+        preverrorstr = error
+
+
+        var Drifterror = getTrackWidthAngle()
+
+        //pid.targetPosition = target
+
+        val prop = Drifterror * kpr
+        val integral = integralEdrift * kir
+        val deriv = kdr * (Drifterror - preverror) / dt
+
+        val power = prop + integral + deriv
+        if (Math.abs(power) < 0.3) {
+            integralEdrift += error
+        }
+        preverror = error
+
+        leftWheel.update(data)
+        rightWheel.update(data2)
+        strafeWheel.update(data)
+        //todo: FIRST CHECK WHAT VALUES THIS IS GIVING. IF IT IS NOT CHANGING THEN JUST PASS IT IN!!!!
+
+        //drive.setPower(pid.update(-forwardDist), 0.0, Range.clip(power, -0.4, 0.4))
+        /*
+        if(Math.abs(getLeftDist() - getRightDist()) <= 2.0){
+            setPower(Range.clip(powerstr, -0.3, 0.3), 0.0, Range.clip(-power, -0.5, 0.5))
+        }else{
+            setPower(Range.clip(powerstr, -0.3, 0.3), 0.0, 0.0)
+        }
+
+         */
+        setPower(Range.clip(powerstr, -0.3, 0.3), 0.0, 0.0)
+
+        telemetry.addData("Left Wheel: ", getLeftDist())
+        telemetry.addData("Right Wheel: ", getRightDist())
+        telemetry.addData("Strafe Wheel: ", getStrafeDist())
+        telemetry.addData("Angle: ", getTrackWidthAngle())
+        telemetry.addData("PowerSTR: ", powerstr)
+        telemetry.addData("ErrorSTR: ", error)
+
+        write()
+    }
+
     /*fun relativeOdometryUpdate(robotPoseDelta : Pose){
         val dtheta = robotPoseDelta.angle
 
@@ -456,5 +608,81 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         val fieldPoseDelta = Pose(fieldPositionDelta.x, fieldPositionDelta.y, dtheta)
 
         pos.add(fieldPoseDelta)
-    }*/
+    }
+    */
+
+    fun targetTurn(targetAngle : Double){
+        dt = (System.currentTimeMillis() - prev_time).toDouble()
+        prev_time = System.currentTimeMillis()
+        angle = angleWrap(getExternalHeading())
+        headingerror = targetAngle - angle
+
+        if (abs(headingerror) > Math.toRadians(180.0)){
+            if (headingerror > 0) {
+                headingerror = -((Math.PI * 2) - abs(headingerror))
+            }
+            else{
+                headingerror = ((Math.PI * 2) - abs(headingerror))
+            }
+        }
+
+        val prop = headingerror * kpA
+        val integral = integralError * kiA
+        val deriv = ((headingerror - prevheading) * kdA / dt)
+
+        val power = prop + integral + deriv
+        if (Math.abs(power) < 0.3) {
+            integralError += headingerror
+        }
+        prevheading = headingerror
+
+        setPower(0.0, 0.0, Range.clip(power, -1.0, 1.0))
+        //write()
+    }
+
+
+    fun targetTurnPlatform(targetAngle : Double){
+        dt = (System.currentTimeMillis() - prev_time).toDouble()
+        prev_time = System.currentTimeMillis()
+        angle = angleWrap(getExternalHeading())
+        headingerror = targetAngle - angle
+
+        if (abs(headingerror) > Math.toRadians(180.0)){
+            if (headingerror > 0) {
+                headingerror = -((Math.PI * 2) - abs(headingerror))
+            }
+            else{
+                headingerror = ((Math.PI * 2) - abs(headingerror))
+            }
+        }
+
+        val prop = headingerror * kp
+        val power = prop
+        if (Math.abs(power) < 0.3) {
+            integralError += headingerror
+        }
+        prevheading = headingerror
+
+        setPower(0.0, 0.0, Range.clip(power, -1.0, 1.0))
+    }
+
+    fun targetTurn(drive : Vector2d, targetAngle : Double){
+        dt = (System.currentTimeMillis() - prev_time).toDouble()
+        prev_time = System.currentTimeMillis()
+        angle = angleWrap(getExternalHeading())
+        headingerror = targetAngle - angle
+
+        val prop = headingerror * kpA
+        val integral = integralError * kiA
+        val deriv = (headingerror - prevheading) * kdA / dt
+
+        val power = prop + integral + deriv
+        if (Math.abs(power) < 0.3) {
+            integralError += headingerror
+        }
+        prevheading = headingerror
+
+        setPower(drive.y, drive.x, Range.clip(power, -1.0, 1.0))
+    }
+
 }

@@ -90,10 +90,11 @@ class Vertical_Elevator_v2(map : HardwareMap, t : Telemetry){
             }
         }
         else if (mSlideState == slideState.STATE_DROP){
-            setTargetPosition(0)
             if (slide_height > -25){
                 setPower(0.0)
                 newState(slideState.STATE_IDLE)
+            }else{
+                setTargetPosition(0)
             }
         }
         else if (mSlideState == slideState.STATE_IDLE){

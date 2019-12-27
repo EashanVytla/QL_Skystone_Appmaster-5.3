@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import android.service.carrier.CarrierService;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -18,6 +19,7 @@ import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_HEIGHT;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_WIDTH;
 
 @Autonomous(name = "QL_Auto_Skystone_Blue", group = "Competition")
+@Disabled
 public class QL_Auto_Skystone_Blue extends OpMode {
     Dead_Wheel leftWheel;
     Dead_Wheel rightWheel;
@@ -420,8 +422,8 @@ public class QL_Auto_Skystone_Blue extends OpMode {
     }
 
     private double getStrafeDist(){
-        return strafeWheel.getDistance() * 7.0 / 17.536;
-    }
+        return strafeWheel.getDistance();
+    }  //7.0 / 17.536
 
     private double getangle(){return drive.angleWrap(drive.getExternalHeading());}
 }

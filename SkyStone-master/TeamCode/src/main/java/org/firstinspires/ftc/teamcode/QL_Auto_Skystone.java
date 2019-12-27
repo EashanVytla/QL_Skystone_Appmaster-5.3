@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import android.service.carrier.CarrierService;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -18,6 +19,7 @@ import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_HEIGHT;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_WIDTH;
 
 @Autonomous(name = "QL_Auto_Skystone_RED", group = "Competition")
+@Disabled
 public class QL_Auto_Skystone extends OpMode {
     Dead_Wheel leftWheel;
     Dead_Wheel rightWheel;
@@ -315,7 +317,7 @@ public class QL_Auto_Skystone extends OpMode {
                     telemetry.addData("Forward Dist: ", getForwardDist() - memo);
                 }
                 break;
-                //case DUMP_BLock
+            //case DUMP_BLock
             case STATE_FLIP:
                 intake.open();
                 flip.operate(4);

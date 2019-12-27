@@ -37,9 +37,9 @@ public class Dead_Wheel_Calibration extends OpMode {
         rightWheel.getEncoder().calibrate(data2);
         strafeWheel.getEncoder().calibrate(data);
 
-        leftWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237); //1.5144 0.0361262
-        rightWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237); //1.5204 -0.00305571
-        strafeWheel.setBehavior(1.53642 * 2 * 0.797, 0.0); //1.50608 -0.221642
+        leftWheel.setBehavior(1.5385, -0.319237); //1.5144 0.0361262
+        rightWheel.setBehavior(1.5385, -0.319237); //1.5204 -0.00305571
+        strafeWheel.setBehavior(1.53642, 0.0); //1.50608 -0.221642
 
         imu = LynxOptimizedI2cFactory.createLynxEmbeddedImu(hub.getStandardModule(), 0);
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
