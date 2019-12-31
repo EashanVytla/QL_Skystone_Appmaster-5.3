@@ -27,6 +27,10 @@ class Caching_Motor(hardwareMap : HardwareMap, name : String) {
         }
     }
 
+    fun reset(){
+        motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+    }
+
     fun write(){
         if (query != -2.0) {
             motor.power = query

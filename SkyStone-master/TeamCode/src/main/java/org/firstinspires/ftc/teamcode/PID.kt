@@ -5,6 +5,8 @@ import com.acmerobotics.roadrunner.control.PIDFController
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.Range
 import org.firstinspires.ftc.robotcore.external.Telemetry
+import org.firstinspires.ftc.teamcode.Odometry.Dead_Wheel
+import org.firstinspires.ftc.teamcode.Odometry.MA3_Encoder
 import org.openftc.revextensions2.ExpansionHubEx
 import org.openftc.revextensions2.RevExtensions2
 

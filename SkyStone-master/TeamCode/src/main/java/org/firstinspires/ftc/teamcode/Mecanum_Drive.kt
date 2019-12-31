@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
+import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.qualcomm.hardware.bosch.BNO055IMU
 import com.qualcomm.hardware.lynx.LynxEmbeddedIMU
@@ -11,8 +12,11 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.Range
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation
+import org.firstinspires.ftc.teamcode.Odometry.Dead_Wheel
+import org.firstinspires.ftc.teamcode.Odometry.MA3_Encoder
 import org.firstinspires.ftc.teamcode.Universal.Math.Pose
 import org.firstinspires.ftc.teamcode.Universal.Math.Vector2
+import org.firstinspires.ftc.teamcode.Universal.Math.Vector2D
 import org.openftc.revextensions2.ExpansionHubEx
 import org.openftc.revextensions2.RevBulkData
 import java.util.*
@@ -48,7 +52,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var headingAccessCount = 0
     val headingUpdateFrequency = 0.1
 
-    var angle = 0.0
+    var rangle : Double = 0.0
     //var angle: Double = 0.toDouble()
     var prevheading = 0.0
     var slowmode2 = false
@@ -96,7 +100,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     //Straight Line Coefficients
     val kpstr = 0.055 //.0625 //0.055 //0.02 //0.1
     val kistr = 0.0 //0.002 //0.0
-    val kdstr = 5.0 //4.0 //0.2
+    val kdstr = 5.6 //5.0 //4.0 //0.2
 
     var preverror = 0.0
     var preverrorstr = 0.0
@@ -105,6 +109,10 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var integralEstraight = 0.0
     var integralEdrift = 0.0
     var targetangle = 0.0
+
+    var p = Pose2d(0.0, 0.0, 0.0)
+    var prevpos = DoubleArray(4)
+    var robotHeading = 0.0
 
     enum class State{
         STATE_STRAFE,
@@ -143,9 +151,9 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
 
         //pid = PID(hardwareMap, telemetry)
 
-        leftWheel = Dead_Wheel(MA3_Encoder("a3", hardwareMap, 0.495))
-        rightWheel = Dead_Wheel(MA3_Encoder("a4", hardwareMap, 1.365))
-        strafeWheel = Dead_Wheel(MA3_Encoder("a1", hardwareMap, 2.464))
+        leftWheel = Dead_Wheel(MA3_Encoder("a3", hardwareMap, 0.0)) //0.495
+        rightWheel = Dead_Wheel(MA3_Encoder("a4", hardwareMap, 0.0)) //1.365
+        strafeWheel = Dead_Wheel(MA3_Encoder("a1", hardwareMap, 0.0)) //2.464
 
         hub = hardwareMap.get(ExpansionHubEx::class.java, "Expansion Hub 2")
         hub2 = hardwareMap.get(ExpansionHubEx::class.java, "Expansion Hub 1")
@@ -163,11 +171,14 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
 
          */
 
+        /*
         leftWheel.setBehavior(1.5385, -0.319237) //1.5144 0.0361262
 
         rightWheel.setBehavior(1.5385, -0.319237) //1.5204 -0.00305571
 
         strafeWheel.setBehavior(1.53642, 0.0) //1.50608 -0.221642
+
+         */
 
 
         motors.forEach {
@@ -470,6 +481,10 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         return strafeWheel.getDistance() * 7.0 / 17.536
     }
 
+    fun getAngle() : Double{
+        return angleWrap(getExternalHeading())
+    }
+
     fun setPowerSide(left : Double, right : Double){
         motors[0].setPower(left)
         motors[1].setPower(left)
@@ -509,7 +524,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         //todo: FIRST CHECK WHAT VALUES THIS IS GIVING. IF IT IS NOT CHANGING THEN JUST PASS IT IN!!!!
 
         //drive.setPower(pid.update(-forwardDist), 0.0, Range.clip(power, -0.4, 0.4))
-        if(strafeDist >= target){
+        if(Math.abs(strafeDist - target) < 1){
             setPower(0.0, 0.0, 0.0)
         }else{
             if(Math.abs(getLeftDist() - getRightDist()) <= 2.0){
@@ -520,13 +535,6 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         }
 
         //drive.setPower(Range.clip(powerstr, -0.5, 0.5), 0.0, 0.0)
-
-        telemetry.addData("Left Wheel: ", getLeftDist())
-        telemetry.addData("Right Wheel: ", getRightDist())
-        telemetry.addData("Strafe Wheel: ", getStrafeDist())
-        telemetry.addData("Angle: ", getTrackWidthAngle())
-        telemetry.addData("Power", power)
-        telemetry.addData("Error: ", error)
         write()
     }
 
@@ -537,7 +545,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         //pid.targetPosition = target
         dt = (System.currentTimeMillis() - prev_time).toDouble()
         prev_time = System.currentTimeMillis()
-        angle = angleWrap(getExternalHeading())
+        rangle = angleWrap(getExternalHeading())
         error = target - forwardDist
 
 
@@ -572,19 +580,18 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         //todo: FIRST CHECK WHAT VALUES THIS IS GIVING. IF IT IS NOT CHANGING THEN JUST PASS IT IN!!!!
 
         //drive.setPower(pid.update(-forwardDist), 0.0, Range.clip(power, -0.4, 0.4))
+
         /*
-        if(Math.abs(getLeftDist() - getRightDist()) <= 2.0){
-            setPower(Range.clip(powerstr, -0.3, 0.3), 0.0, Range.clip(-power, -0.5, 0.5))
+        if(Math.abs(getLeftDist() - getRightDist()) <= 3.0){
+            setPower(Range.clip(powerstr, -0.25, 0.25), 0.0, Range.clip(power, -0.25, 0.25))
         }else{
-            setPower(Range.clip(powerstr, -0.3, 0.3), 0.0, 0.0)
+            setPower(Range.clip(powerstr, -0.25, 0.25), 0.0, 0.0)
         }
 
          */
-        setPower(Range.clip(powerstr, -0.3, 0.3), 0.0, 0.0)
 
-        telemetry.addData("Left Wheel: ", getLeftDist())
-        telemetry.addData("Right Wheel: ", getRightDist())
-        telemetry.addData("Strafe Wheel: ", getStrafeDist())
+        setPower(Range.clip(powerstr, -0.25, 0.25), 0.0, 0.0)
+
         telemetry.addData("Angle: ", getTrackWidthAngle())
         telemetry.addData("PowerSTR: ", powerstr)
         telemetry.addData("ErrorSTR: ", error)
@@ -614,8 +621,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     fun targetTurn(targetAngle : Double){
         dt = (System.currentTimeMillis() - prev_time).toDouble()
         prev_time = System.currentTimeMillis()
-        angle = angleWrap(getExternalHeading())
-        headingerror = targetAngle - angle
+        rangle = angleWrap(getExternalHeading())
+        headingerror = targetAngle - rangle
 
         if (abs(headingerror) > Math.toRadians(180.0)){
             if (headingerror > 0) {
@@ -644,8 +651,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     fun targetTurnPlatform(targetAngle : Double){
         dt = (System.currentTimeMillis() - prev_time).toDouble()
         prev_time = System.currentTimeMillis()
-        angle = angleWrap(getExternalHeading())
-        headingerror = targetAngle - angle
+        rangle = angleWrap(getExternalHeading())
+        headingerror = targetAngle - rangle
 
         if (abs(headingerror) > Math.toRadians(180.0)){
             if (headingerror > 0) {
@@ -669,8 +676,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     fun targetTurn(drive : Vector2d, targetAngle : Double){
         dt = (System.currentTimeMillis() - prev_time).toDouble()
         prev_time = System.currentTimeMillis()
-        angle = angleWrap(getExternalHeading())
-        headingerror = targetAngle - angle
+        rangle = angleWrap(getExternalHeading())
+        headingerror = targetAngle - rangle
 
         val prop = headingerror * kpA
         val integral = integralError * kiA
@@ -684,5 +691,4 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
 
         setPower(drive.y, drive.x, Range.clip(power, -1.0, 1.0))
     }
-
 }

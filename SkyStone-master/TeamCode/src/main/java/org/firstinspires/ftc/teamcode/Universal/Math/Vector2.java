@@ -89,6 +89,17 @@ public class Vector2 {
         return offset.magnitude();
     }
 
+    public Vector2 normalize(Vector2 other){
+        double x = (this.x + other.x) / 2.0;
+        double y = (this.y + other.y) / 2.0;
+
+        return new Vector2(x, y);
+    }
+
+    public double norm() {
+        return Math.hypot(x, y);
+    }
+
     public Vector2 compound(Vector2 v){
         return new Vector2(this.x + v.x, this.y + v.y);
     }

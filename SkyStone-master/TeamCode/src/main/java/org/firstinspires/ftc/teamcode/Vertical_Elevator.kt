@@ -132,7 +132,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
     }
 
     fun getLiftHeight() : Double{
-        return ((motors[0].getCurrentPosition() + motors[1].getCurrentPosition()) / 2).toDouble() - zero
+        return motors[0].getCurrentPosition().toDouble()
     }
 
     fun getBoundaryConditions() : slideBoundary{

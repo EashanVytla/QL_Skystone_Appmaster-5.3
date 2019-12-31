@@ -1,9 +1,8 @@
-package org.firstinspires.ftc.teamcode
+package org.firstinspires.ftc.teamcode.Odometry
 
 import com.qualcomm.robotcore.hardware.AnalogInput
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.openftc.revextensions2.RevBulkData
-import java.time.temporal.TemporalAdjusters.previous
 
 class MA3_Encoder(name : String, hardwareMap: HardwareMap, offset : Double) {
     var e = 0.0
@@ -24,7 +23,12 @@ class MA3_Encoder(name : String, hardwareMap: HardwareMap, offset : Double) {
     }
 
     fun calibrate(data : RevBulkData){
-        base = (data.getAnalogInputValue(encoder).toDouble() * (2 * Math.PI / 520) - offset + (2 * Math.PI)) % (2 * Math.PI)
+        //base = (data.getAnalogInputValue(encoder).toDouble() * (2 * Math.PI / 520) - offset + (2 * Math.PI)) % (2 * Math.PI)
+        base = (data.getAnalogInputValue(encoder).toDouble() * (2 * Math.PI / 368.474576) - offset + (2 * Math.PI)) % (2 * Math.PI)
+    }
+
+    fun getRawDist(data: RevBulkData) : Double{
+        return data.getAnalogInputValue(encoder).toDouble()
     }
 
     fun getDist() : Double{
@@ -32,7 +36,8 @@ class MA3_Encoder(name : String, hardwareMap: HardwareMap, offset : Double) {
     }
 
     fun update(data : RevBulkData) {
-        pos = (data.getAnalogInputValue(encoder).toDouble() * (2 * Math.PI / 520) - offset - base + (2 * Math.PI)) % (2 * Math.PI)
+        //pos = (data.getAnalogInputValue(encoder).toDouble() * (2 * Math.PI / 520) - offset - base + (2 * Math.PI)) % (2 * Math.PI)
+        pos = (data.getAnalogInputValue(encoder).toDouble() * (2 * Math.PI / 368.474576) - offset - base + (2 * Math.PI)) % (2 * Math.PI)
         //pos = (data.getAnalogInputValue(encoder).toDouble())// * (2 * Math.PI / 3.3))
 
         when {
@@ -42,6 +47,7 @@ class MA3_Encoder(name : String, hardwareMap: HardwareMap, offset : Double) {
         }
 
         previous = pos
-        pos = (data.getAnalogInputValue(encoder).toDouble() * (2 * Math.PI / 520) - offset + (2 * Math.PI)) % (2 * Math.PI)
+        pos = (data.getAnalogInputValue(encoder).toDouble() * (2 * Math.PI / 368.474576) - offset + (2 * Math.PI)) % (2 * Math.PI)
+        //pos = (data.getAnalogInputValue(encoder).toDouble() * (2 * Math.PI / 520) - offset - base + (2 * Math.PI)) % (2 * Math.PI)
     }
 }

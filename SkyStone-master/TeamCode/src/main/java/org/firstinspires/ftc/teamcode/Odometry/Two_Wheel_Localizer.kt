@@ -1,8 +1,10 @@
-package org.firstinspires.ftc.teamcode
+package org.firstinspires.ftc.teamcode.Odometry
 
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.qualcomm.hardware.bosch.BNO055IMU
+import org.firstinspires.ftc.teamcode.FresnelIntegrals
+import org.firstinspires.ftc.teamcode.LynxOptimizedI2cFactory
 import org.openftc.revextensions2.ExpansionHubEx
 import org.openftc.revextensions2.RevBulkData
 import java.lang.StrictMath.cos
