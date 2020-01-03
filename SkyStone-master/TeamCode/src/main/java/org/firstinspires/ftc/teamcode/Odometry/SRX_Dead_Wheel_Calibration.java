@@ -31,7 +31,6 @@ public class SRX_Dead_Wheel_Calibration extends OpMode {
         odos.update();
         telemetry.addData("POSE",odos.getPoseEstimate());
         currentPos = localizer.ktrack();
-        telemetry.addData("Current Position: ", currentPos.toString());
         telemetry.addData("ANGLE: ", localizer.getTrackWidthAngle());
         localizer.OutputRaw();
         telemetry.update();

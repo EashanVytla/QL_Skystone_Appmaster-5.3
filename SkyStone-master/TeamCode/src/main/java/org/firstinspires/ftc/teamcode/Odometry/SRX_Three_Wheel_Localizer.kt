@@ -1,12 +1,20 @@
 package org.firstinspires.ftc.teamcode.Odometry
 
+import com.acmerobotics.roadrunner.control.PIDCoefficients
+import com.acmerobotics.roadrunner.control.PIDFController
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.localization.ThreeTrackingWheelLocalizer
+import com.acmerobotics.roadrunner.profile.MotionProfile
+import com.acmerobotics.roadrunner.profile.MotionProfileGenerator
+import com.acmerobotics.roadrunner.profile.MotionState
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.Range
 import org.firstinspires.ftc.robotcore.external.State
 import org.firstinspires.ftc.robotcore.external.Telemetry
+import org.firstinspires.ftc.teamcode.Flipper
 import org.firstinspires.ftc.teamcode.Mecanum_Drive
+import org.firstinspires.ftc.teamcode.Universal.Math.Pose
 import org.firstinspires.ftc.teamcode.Universal.Math.Vector2D
 import org.openftc.revextensions2.ExpansionHubEx
 import org.openftc.revextensions2.RevExtensions2
@@ -36,22 +44,27 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
     val kdr = 0.0
 
     //Turn Coefficients
-    val kpA = 0.39 //0.39
-    val kiA = 0.008 //0.008
-    val kdA = 0.2 //0.2
+    val kpA = 0.5 //0.39
+    val kiA = 0.0
+    val kdA = 0.07 //0.6
 
     //Rotational STRAFE coefficients
     val kprs = 0.6
 
     //Straight Line Coefficients
-    val kpstr = 0.025 //0.055
-    val kistr = 0.0 //0.0
-    val kdstr = 9.25
+    val kpstr = 0.0425     //0.03
+    val kistr = 0.0      //0.0
+    val kdstr = 0.0125      //9.25
 
     //Strafe PID coeffients
-    val kpstf = 0.05
-    val kistf = 0.0
-    val kdstf = 10.0
+    val kpstf = 0.09      //0.09
+    val kistf = 0.002
+    val kdstf = 0.02      //10.0
+
+    //feedrforward
+    val kv = 0.02
+    val ka = 0.005
+    val kstatic = 0.0
 
     var preverror = 0.0
     var preverrorstr = 0.0
@@ -63,6 +76,20 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
     var rotprevheading = 0.0
     var vectorAngle = 0.0
 
+    var pidstr : PIDFController
+    var pidstf : PIDFController
+    var pidr : PIDFController
+
+    var first = true
+    var primaryAngle = 0.0
+
+    fun resetfirst(){
+        first = true
+    }
+
+    //val strprofile : MotionProfile
+    var flip : Flipper
+
     init {
         RevExtensions2.init()
         hub = hardwareMap.get(ExpansionHubEx::class.java, "Expansion Hub 2")
@@ -72,9 +99,70 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         right = RightWheel
         strafe = StrafeWheel
         drive = Mecanum_Drive(hardwareMap, telemetry)
+        flip = Flipper(hardwareMap, telemetry)
         left.reset()
         right.reset()
         strafe.reset()
+        pidstr = PIDFController(PIDCoefficients(kpstr, kistr, kdstr), kv, ka, kstatic)
+        pidstf = PIDFController(PIDCoefficients(kpstf, kistf, kdstf), kv, ka, kstatic)
+        pidr = PIDFController(PIDCoefficients(kpA, kiA, kdA))
+
+        /*
+        strprofile = MotionProfileGenerator.generateSimpleMotionProfile(
+                MotionState(0.0, 0.0, 0.0),
+                MotionState(45.0, 0.0, 0.0),
+                25.0,
+                40.0,
+                100.0
+        )
+         */
+    }
+
+    fun reset(){
+        pidstr.reset()
+        pidstf.reset()
+        pidr.reset()
+    }
+
+    fun GoTo(position: Pose2d, strspeed : Double, stfspeed : Double, rspeed : Double){
+        pidstr.setOutputBounds(-strspeed, strspeed)
+        pidstf.setOutputBounds(-stfspeed, stfspeed)
+        pidr.setOutputBounds(-rspeed, rspeed)
+
+        val data = hub.bulkInputData
+        val currentPos = odos.poseEstimate
+        odos.update()
+
+        if(currentPos.heading <= Math.PI){
+            heading = currentPos.heading
+        }else{
+            heading = -((2 * Math.PI ) - currentPos.heading)
+        }
+        telemetry.addData("heading: ", heading)
+
+        pidr.targetPosition = position.heading
+        pidstr.targetPosition = position.y
+        pidstf.targetPosition = position.x
+
+        //val state = strprofile[time]
+        val powerstr = pidstr.update(currentPos.x/*, state.v, state.a*/)
+        telemetry.addData("power", powerstr)
+
+        left.update(data)
+        right.update(data)
+        strafe.update(data)
+
+        drive.centricSetPower(-powerstr, pidstf.update(-currentPos.y), pidr.update(heading), currentPos.heading)
+
+        drive.write()
+    }
+
+    fun getForwardDist() : Double{
+        val data = hub.bulkInputData
+        left.update(data)
+        right.update(data)
+
+        return (left.getDist() + right.getDist())/2
     }
 
     private fun update() {
@@ -88,7 +176,7 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         val arcError = left.getDist() - right.getDist()
         val theta: Double
         if (arcError / TRACK_WIDTH <= 1.0 && arcError / TRACK_WIDTH >= -1.0) {
-            theta = Math.asin(arcError / TRACK_WIDTH)
+            theta = arcError / TRACK_WIDTH
         } else {
             theta = 0.0
         }
@@ -145,23 +233,65 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
 
     var heading = 0.0
 
-    fun GoTo(position: Pose2d) {
+    fun GoToRR(position : Pose2d, strspeed : Double, stfspeed : Double, rspeed : Double){
+        val data = hub.bulkInputData
+        val currentPos = odos.poseEstimate
+        odos.update()
+
+        pidstr.setOutputBounds(-strspeed, strspeed)
+        pidstf.setOutputBounds(-stfspeed, stfspeed)
+        pidr.setOutputBounds(-rspeed, rspeed)
+
+        val errorV = Vector2D(position.x, position.y)
+        telemetry.addData("error: ", errorV.toString())
+        if(currentPos.heading <= Math.PI){
+            heading = currentPos.heading
+        }else{
+            heading = -((2 * Math.PI ) - currentPos.heading)
+        }
+        vectorAngle = Math.atan2(errorV.x(), errorV.y()) - heading
+        if(first){
+            primaryAngle = vectorAngle
+            first = false
+        }
+        var yTrans = errorV.norm() * Math.cos(primaryAngle)
+        var xTrans = errorV.norm() * Math.sin(primaryAngle)
+
+        pidr.targetPosition = position.heading
+        pidstr.targetPosition = yTrans
+        pidstf.targetPosition = xTrans
+
+        left.update(data)
+        right.update(data)
+        strafe.update(data)
+
+        drive.centricSetPower(-pidstr.update(currentPos.x), pidstf.update(-currentPos.y), pidr.update(heading), currentPos.heading)
+
+        drive.write()
+    }
+
+    fun GoToLINEAR(position: Pose2d) {
         val data = hub.bulkInputData
         val currentPos = odos.poseEstimate
         odos.update()
 
         val dt = (System.currentTimeMillis() - prev_time).toDouble()
         prev_time = System.currentTimeMillis()
-        val errorV = Vector2D(position.x - currentPos.y, position.y - currentPos.x)
+        val errorV = Vector2D(position.x + currentPos.y, position.y - currentPos.x)
         //val robotAngle = Math.atan2(errorV.x(), errorV.y())
         //robotAngle = Math.atan2(errorV.x(), errorV.y()) //todo: change this to error.x and y for goto()
 
-        if(currentPos.heading >= Math.PI){
+        if(currentPos.heading <= Math.PI){
             heading = currentPos.heading
         }else{
             heading = -((2 * Math.PI ) - currentPos.heading)
         }
+        telemetry.addData("heading: ", heading)
         vectorAngle = Math.atan2(errorV.x(), errorV.y()) - heading
+        if(first){
+            primaryAngle = vectorAngle
+            first = false
+        }
         var yTrans = errorV.norm() * Math.cos(vectorAngle)
         var xTrans = errorV.norm() * Math.sin(vectorAngle)
         telemetry.addData("norm: ", errorV.norm())
@@ -175,7 +305,8 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
          */
         val error = (yTrans)//currentPos.y
         val straferror = (xTrans)//currentPos.x
-        var rotheadingerror = position.heading - currentPos.heading
+        var rotheadingerror = position.heading - heading
+        pidr.targetPosition = position.heading
         telemetry.addData("taget:", position.toString())
         telemetry.addData("error x: ", xTrans)
         telemetry.addData("error y: ", yTrans)
@@ -215,7 +346,7 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
 
         val propr = rotheadingerror * kpA
         val integralr = rotintegralError * kiA
-        val derivr = kdA * ((rotheadingerror - rotprevheading)/ dt)
+        val derivr = ((rotheadingerror - rotprevheading) * kdA / dt)
 
         val power = prop + integral + deriv
         val rotpower = propr + integralr + derivr
@@ -228,13 +359,28 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         right.update(data)
         strafe.update(data)
 
-        drive.setPower( Range.clip(-powerstr, -0.4, 0.4) , Range.clip(powerstf, -0.4, 0.4), Range.clip(rotpower, -0.4, 0.4))
+        //drive.centricSetPower(Range.clip(-powerstr, -0.3, 0.3), Range.clip(powerstf, -0.3, 0.3), pidr.update(heading), heading)
+        drive.centricSetPower(Range.clip(-powerstr, -0.3, 0.3), Range.clip(powerstf, -0.3, 0.3), pidr.update(heading), currentPos.heading)
+        //drive.centricSetPower(Range.clip(-powerstr, -0.3, 0.3), Range.clip(powerstf, -0.3, 0.3), pidr.update(heading), vectorAngle)
+        /*
+        if(Math.abs(Math.toDegrees(primaryAngle)) == 0.0 ){
+            drive.setPower( Range.clip(-powerstr, -0.375, 0.375),0.0, pidr.update(heading))
+        }else if(Math.abs(Math.toDegrees(primaryAngle)) == Math.PI/2){
+            drive.setPower(Range.clip(-powerstr, -0.4, 0.4), Range.clip(powerstf, -0.5, 0.5), pidr.update(heading))
+        }else if(Math.abs(Math.toDegrees(primaryAngle)) == 180.0){
+            drive.setPower( Range.clip(-powerstr, -0.375, 0.375),0.0, pidr.update(heading))
+        }else{
+            drive.setPower( Range.clip(-powerstr, -0.3, 0.3), Range.clip(powerstf, -0.3, 0.3), pidr.update(heading))
+        }
+
+         */
+
         telemetry.addData("Strafe Power: ", powerstf)
-        //drive.setPower( Range.clip(-powerstr, -0.3, 0.3), 0.0,0.0/*Range.clip(powerstf, -0.3, 0.3), Range.clip(rotpower, -0.3, 0.3)*/)
+        //drive.setPower( Range.clip(-powerstr, -0.4, 0.4), 0.0,0.0/*Range.clip(powerstf, -0.3, 0.3), Range.clip(rotpower, -0.3, 0.3)*/)
         //drive.setPower( /*Range.clip(powerstr, -0.3, 0.3)*/0.0 , Range.clip(powerstf, -0.3, 0.3), /*Range.clip(rotpower, -0.3, 0.3)*/ 0.0)
         //drive.setPower(/*Range.clip(powerstr, -0.3, 0.3)*/ 0.0, /*Range.clip(powerstf, -0.3, 0.3)*/0.0, Range.clip(rotpower, -0.3, 0.3))
-        telemetry.addData("robotangle: ", vectorAngle)
-        rotprevheading = currentPos.heading
+        telemetry.addData("robotangle: ", primaryAngle)
+        rotprevheading = heading
         drive.write()
     }
 }

@@ -16,7 +16,7 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
     public static double GEAR_RATIO = 1; // output (wheel) speed / input (encoder) speed
 
     public static double LATERAL_DISTANCE = 15.9235669; // in; distance between the left and right wheels
-    public static double FORWARD_OFFSET = 4.08535032; // in; offset of the lateral wheel
+    public static double FORWARD_OFFSET = -3.890925; //3.9625//3.92577 //4.08535032; // in; offset of the lateral wheel
 
     private DcMotor leftEncoder, rightEncoder, frontEncoder;
 
@@ -41,7 +41,7 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
         return Arrays.asList(
                 encoderTicksToInches(leftEncoder.getCurrentPosition()),
                 encoderTicksToInches(rightEncoder.getCurrentPosition()),
-                encoderTicksToInches(frontEncoder.getCurrentPosition())
+                encoderTicksToInches(-frontEncoder.getCurrentPosition())
         );
     }
 }

@@ -1,8 +1,10 @@
+
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.localization.ThreeTrackingWheelLocalizer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -26,6 +28,7 @@ import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_HEIGHT;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_WIDTH;
 
 @Autonomous(name = "QL_Skystone_Blue", group = "Competition")
+@Disabled
 public class QL_2SkyStone_SERVO extends OpMode {
     Dead_Wheel leftWheel;
     Dead_Wheel rightWheel;
@@ -88,7 +91,7 @@ public class QL_2SkyStone_SERVO extends OpMode {
         STATE_PARK,
         STATE_RELEASE
     }
-    State mRobotState = State.STATE_STRAFE;
+    State mRobotState = State.STATE_DRIVE_TO_BLOCK;
 
     public void init(){
         RevExtensions2.init();
@@ -152,6 +155,7 @@ public class QL_2SkyStone_SERVO extends OpMode {
         RevBulkData data2 = hub2.getBulkInputData();
         SkystonePos = 2;
         flip.read();
+        odos.update();
         Pose2d currentPos = odos.getPoseEstimate();
 
         leftWheel.update(data);
@@ -165,7 +169,7 @@ public class QL_2SkyStone_SERVO extends OpMode {
             //Target Dist for Return is equal to ---
         }else if(SkystonePos == 2){
             cross_target = new Pose2d(-18, -47);
-            drive_to_block_target = new Pose2d(-27, -15, 0.0);
+            drive_to_block_target = new Pose2d(-31, 7.5, 0.0);
             return_target = new Pose2d();
             drive_platform_target = new Pose2d();
             //Target Dist for Return is equal to ---
@@ -173,16 +177,17 @@ public class QL_2SkyStone_SERVO extends OpMode {
 
         switch (mRobotState) {
             case STATE_DRIVE_TO_BLOCK:
-                if(Math.abs(drive_to_block_target.getX() - currentPos.getX()) <= 1.0 && Math.abs(drive_to_block_target.getY() - currentPos.getY()) <= 1.0 && mStateTime.time() >= 3.0){
-                    drive.setPower(0.0, 0.0, 0.0);
-                    memo = Math.abs(getStrafeDist());
-                    newState(State.STATE_STRAFE);
-                }else if(mStateTime.time() >= 3.5){
-                    drive.setPower(0.0, 0.0, 0.0);
-                    memo = Math.abs(getStrafeDist());
-                    newState(State.STATE_STRAFE);
+                if(Math.abs(drive_to_block_target.getX() - currentPos.getY()) <= 1.0){
+                    if(mStateTime.time() >= 1.0){
+                        drive.setPower(0.0, 0.0, 0.0);
+                        memo = Math.abs(getStrafeDist());
+                        newState(State.STATE_PICKUP);
+                    }else{
+                        localizer.GoTo(drive_to_block_target,0.50,0.5,0.5);
+                    }
                 }else{
-                    localizer.GoTo(drive_platform_target);
+                    localizer.GoTo(drive_to_block_target,0.5,0.5,0.5);
+                    mStateTime.reset();
                 }
                 break;
             case STATE_PICKUP:
@@ -190,16 +195,41 @@ public class QL_2SkyStone_SERVO extends OpMode {
                     memo = Math.abs(getStrafeDist());
                     newState(State.STATE_STRAFEOUT);
                 }else{
-                    bservo.setPosition(0.3);
+                    bservo.setPosition(0.6);
                 }
                 break;
             case STATE_STRAFEOUT:
-                if (Math.abs(drive_to_block_target.getX() - currentPos.getX()) <= 1.0 && Math.abs(drive_to_block_target.getY() - currentPos.getY()) <= 1.0 && mStateTime.time() >= 3.0) {
+                if (Math.abs(-21 - currentPos.getX()) <= 1.0 && Math.abs(11 - currentPos.getY()) <= 1.0 && mStateTime.time() >= 3.0) {
+                    drive.setPower(0.0, 0.0, 0.0);
+                    newState(State.STATE_CROSS);
+                } else if(mStateTime.time() >= 4.0){
+                    drive.setPower(0.0, 0.0, 0.0);
+                    newState(State.STATE_CROSS);
+                }else{
+                    localizer.GoTo(new Pose2d(-21, 11, 0.0),0.5,0.5,0.5);
+                }
+                break;
+            case STATE_CROSS:
+                if (Math.abs(cross_target.getX() - currentPos.getX()) <= 1.0 && Math.abs(cross_target.getX() - currentPos.getY()) <= 1.0) {
+                    if(mStateTime.time() >= 1.0){
+                        drive.setPower(0.0, 0.0, 0.0);
+                        memo = getForwardDist();
+                        newState(State.STATE_RETURN);
+                    }else{
+                        localizer.GoTo(cross_target,0.5,0.5,0.5);
+                    }
+                } else {
+                    localizer.GoTo(cross_target,0.5,0.5,0.5);
+                    mStateTime.reset();
+                }
+                break;
+            case STATE_RETURN:
+                if (Math.abs(0 - currentPos.getX()) <= 1.0 && Math.abs(0 - currentPos.getY()) <= 1.0 && mStateTime.time() >= 3.0) {
                     drive.setPower(0.0, 0.0, 0.0);
                     memo = getForwardDist();
-                    newState(State.STATE_REALLIGN2);
+                    //newState(State.STATE_REALLIGN2);
                 } else {
-                    localizer.GoTo();
+                    localizer.GoTo(new Pose2d(0.0, 0.0, 0.0),0.5,0.5,0.5);
                 }
                 break;
             case STATE_REALLIGN2:
@@ -210,208 +240,11 @@ public class QL_2SkyStone_SERVO extends OpMode {
                     drive.setPower(0.0,0.0,0.0);
                     newState(State.STATE_CROSS);
                 }else{
-                    drive.setPowerSide(Range.clip((getLeftDist() + drive_to_block) * kpRL, -0.4, 0.4), Range.clip((getRightDist() + drive_to_block) * kpRL, -0.4, 0.4));
-                }
-                /*
-                drive.read(data);
-                if (getAngle() >= 0.0 && mStateTime.time() >= 1.5) {
-                    drive.setPower(0.0, 0.0, 0.0);
-                    newState(State.STATE_CROSS);
-                } else if (mStateTime.time() >= 2.0) {
-                    drive.setPower(0.0, 0.0, 0.0);
-                    newState(State.STATE_CROSS);
-                } else{
-                    drive.targetTurn(0.0);
-                }
-
-                 */
-                break;
-            case STATE_CROSS:
-                if(mStateTime.time() >= 0.5){
-                    if(Math.abs(drive_to_block_target.getX() - currentPos.getX()) <= 1.0 && Math.abs(drive_to_block_target.getY() - currentPos.getY()) <= 1.0 && mStateTime.time() >= 3.0){
-                        drive.setPower(0.0, 0.0, 0.0);
-                        newState(State.STATE_DEPOSIT);
-                    }else if(mStateTime.time() >= 3.5){
-                        drive.setPower(0.0, 0.0, 0.0);
-                        newState(State.STATE_DEPOSIT);
-                    }else{
-                        drive.straight(crossDist, Math.abs(getForwardDist()) - memo, telemetry); //DON"T DO MATH.ABS TRUST ME!!!
-                    }
-                }
-                break;
-            case STATE_DEPOSIT:
-                if(mStateTime.time() >= 1.0){
-                    memo = getForwardDist();
-                    newState(State.STATE_RETURN);
-                }else{
-                    bservo.setPosition(0.0);
-                }
-                break;
-            case STATE_RETURN:
-                if(Math.abs(drive_to_block_target.getX() - currentPos.getX()) <= 1.0 && Math.abs(drive_to_block_target.getY() - currentPos.getY()) <= 1.0 && mStateTime.time() >= 3.0){
-                    drive.setPower(0.0, 0.0, 0.0);
-                    memo = Math.abs(getStrafeDist());
-                    newState(State.STATE_STRAFEIN);
-                }else if(mStateTime.time() >= 3.5){
-                    drive.setPower(0.0, 0.0, 0.0);
-                    memo = Math.abs(getStrafeDist());
-                    newState(State.STATE_STRAFEIN);
-                }else{
-                    drive.straight(ReturnTarget, -getForwardDist(), telemetry); //DON"T DO MATH.ABS TRUST ME!!!
-                }
-                break;
-            case STATE_STRAFEIN:
-                if(mStateTime.time() >= 0.5){
-                    if(Math.abs(getStrafeDist()) >= 29){
-                        drive.setPower(0.0, 0.0, 0.0);
-                        newState(State.STATE_PICKUP2);
-                    }else{
-                        drive.strafe(29, Math.abs(getStrafeDist()), -0.3, telemetry);
-                    }
-                }
-                break;
-            case STATE_REALLIGN:
-                if(mStateTime.time() >= 2.0){
-                    drive.setPower(0.0,0.0,0.0);
-                    newState(State.STATE_PICKUP);
-                }else{
-                    drive.setPowerSide(Range.clip((getLeftDist() + drive_to_block) * kpRL, -0.2, 0.2), Range.clip((getRightDist() + drive_to_block) * kpRL, -0.2, 0.2));
-                }
-                break;
-            case STATE_REALLIGN3:
-                if(Math.abs(Math.abs(getLeftDist()) - memoL) <= 0.1 && Math.abs(Math.abs(getRightDist()) - memoR) <= 0.1){
-                    drive.setPower(0.0,0.0,0.0);
-                    newState(State.STATE_STRAFEIN);
-                }else if(mStateTime.time() >= 3.0) {
-                    drive.setPower(0.0,0.0,0.0);
-                    newState(State.STATE_STRAFEIN);
-                }else{
-                    drive.setPowerSide(Range.clip((getLeftDist() - 9) * kpRL, -0.2, 0.2), Range.clip((getRightDist() - 9) * kpRL, -0.2, 0.2));
-                }
-                break;
-            case STATE_REALLIGN4:
-                if(Math.abs(Math.abs(getLeftDist()) - memoL) <= 0.1 && Math.abs(Math.abs(getRightDist()) - memoR) <= 0.1){
-                    drive.setPower(0.0,0.0,0.0);
-                    newState(State.STATE_CROSS2);
-                }else if(mStateTime.time() >= 3.0) {
-                    drive.setPower(0.0,0.0,0.0);
-                    newState(State.STATE_CROSS2);
-                }else{
-                    drive.setPowerSide(Range.clip((getLeftDist() - memoL) * kpRL, -0.2, 0.2), Range.clip((getRightDist() - memoR) * kpRL, -0.2, 0.2));
-                }
-                break;
-            case STATE_PICKUP2:
-                if(mStateTime.time() >= 1.0){
-                    memo = Math.abs(getStrafeDist());
-                    newState(State.STATE_STRAFEOUT2);
-                }else{
-                    bservo.setPosition(0.5);
-                }
-                break;
-            case STATE_STRAFEOUT2:
-                if (Math.abs(getStrafeDist() - memo) >= 5) {
-                    drive.setPower(0.0, 0.0, 0.0);
-                    memo = getForwardDist();
-                    newState(State.STATE_REALLIGN4);
-                } else {
-                    drive.strafe(5, Math.abs(getStrafeDist()) - memo, 0.3, telemetry);
-                }
-                break;
-            case STATE_CROSS2:
-                if (mStateTime.time() >= 0.5) {
-                    if(Math.abs(getForwardDist() - memo) > (crossDist + 10) && mStateTime.time() >= 4.0){
-                        drive.setPower(0.0, 0.0, 0.0);
-                        memoL = getLeftDist();
-                        memoR = getRightDist();
-                        newState(State.STATE_PIVOT);
-                    }else if(mStateTime.time() >= 4.5){
-                        drive.setPower(0.0, 0.0, 0.0);
-                        memoL = Math.abs(getLeftDist());
-                        memoR = Math.abs(getRightDist());
-                        newState(State.STATE_PIVOT);
-                    }else{
-                        drive.straight(crossDist + 10, Math.abs(getForwardDist()) - memo, telemetry); //DON"T DO MATH.ABS TRUST ME!!!
-                    }
-                }
-                break;
-            case STATE_PIVOT:
-                if(Math.abs(Math.abs(getLeftDist()) + 0.93) <= 0.1 && Math.abs(Math.abs(getRightDist()) + 22.5) <= 0.1){
-                    drive.setPower(0.0,0.0,0.0);
-                    newState(State.STATE_DRIVE_TO_FOUNDATION);
-                }else if(mStateTime.time() >= 2.5){
-                    drive.setPower(0.0,0.0,0.0);
-                    newState(State.STATE_DRIVE_TO_FOUNDATION);
-                }else{
-                    drive.setPowerSide(Range.clip(((getLeftDist() - memoL) + 0.93) * kpPV, -0.4, 0.4), Range.clip(((getRightDist() - memoR) + 23) * kpPV, -0.4, 0.4));
-                }
-                telemetry.addData("getLeftDist() + memoL = ", (getLeftDist() + memoL));
-                telemetry.addData("getLeftDist() + memoL = ", (getLeftDist() + memoL));
-                break;
-            case STATE_DRIVE_TO_FOUNDATION:
-                if(Math.abs(getForwardDist() - memo) > (crossDist + 10) && mStateTime.time() >= 3.0){
-                    drive.setPower(0.0, 0.0, 0.0);
-                }else if(mStateTime.time() >= 3.5){
-                    drive.setPower(0.0, 0.0, 0.0);
-                    flip.clamp();
-                    newState(State.STATE_PULL_FORWARD);
-                }else{
-                    drive.straight(crossDist + 10, Math.abs(getForwardDist()) - memo, telemetry); //DON"T DO MATH.ABS TRUST ME!!!
-                }
-                break;
-            case STATE_PULL_FORWARD:
-                if (getForwardDist() - memo > 12.0){
-                    drive.setPower(0.0, 0.0, 0.0);
-                    newState(State.STATE_TURN);
-                }
-                else{
-                    drive.setPower(-0.5, 0.0, 0.0);
-                }
-                telemetry.addData("Forward Dist: ", getForwardDist() - memo);
-                break;
-            case STATE_TURN:
-                if(mStateTime.time() >= 0.5){
-                    drive.read(data);
-                    if (Math.abs(getAngle() - (Math.PI) / 2) <= Math.toRadians(5.0)){
-                        drive.setPower(0.0, 0.0, 0.0);
-                        memo = getForwardDist();
-                        newState(State.STATE_RELEASE);
-                    }else if(mStateTime.time() >= 2.5){
-                        drive.setPower(0.0, 0.0, 0.0);
-                        memo = getForwardDist();
-                        newState(State.STATE_RELEASE);
-                    }
-                    else{
-                        drive.targetTurnPlatform(Math.PI/2);
-                    }
-                }
-                break;
-            case STATE_PUSH_BACK:
-                if (getForwardDist() - memo < -10){
-                    drive.setPower(0.0, 0.0, 0.0);
-                    memo = getStrafeDist();
-                }
-                if(mStateTime.time() >= 1.5){
-                    drive.setPower(0.0, 0.0, 0.0);
-                    memo = getStrafeDist();
-                }
-                else{
-                    drive.setPower(0.5, 0.0, 0.0);
-                }
-                telemetry.addData("Forward Dist: ", getForwardDist() - memo);
-                break;
-            case STATE_RELEASE:
-                //release foundation
-                flip.resetPlatform();
-                memo = getForwardDist();
-                if (mStateTime.time() >= 0.5){
-                    newState(State.STATE_PUSH_BACK);
+                    drive.setPowerSide(Range.clip((getLeftDist() + drive_to_block_target.getX()) * kpRL, -0.4, 0.4), Range.clip((getRightDist() + drive_to_block_target.getY()) * kpRL, -0.4, 0.4));
                 }
                 break;
         }
-        telemetry.addData("Left Dist: ", getLeftDist());
-        telemetry.addData("Right Dist", getRightDist());
-        telemetry.addData("Forward Dist: ", getForwardDist());
-        telemetry.addData("Strafe Dist: ", getStrafeDist());
+        telemetry.addData("POS: ", odos.getPoseEstimate().toString());
         telemetry.addData("mStateTime: ", mStateTime.time());
         telemetry.addData("State: ", mRobotState);
 
@@ -421,8 +254,9 @@ public class QL_2SkyStone_SERVO extends OpMode {
     }
 
     private void newState(State state){
-        mRobotState = state;
+        localizer.resetfirst();
         mStateTime.reset();
+        mRobotState = state;
     }
 
     private double getForwardDist(){

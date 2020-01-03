@@ -47,6 +47,8 @@ class Intake(hardwareMap: HardwareMap) {
     }
 
     fun setPower(power : Double){
+        motors[0].motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        motors[1].motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         motors[0].setPower(power)
         motors[1].setPower(-power)
     }
@@ -86,10 +88,10 @@ class Intake(hardwareMap: HardwareMap) {
     fun operate(g1 : Gamepad, g2: Gamepad){
         setPower((0.35 * g1.right_trigger) - (0.2 * g1.left_trigger))
 
-        if(g2.left_bumper){
+        if(g2.b){
             newState(clamp.OPEN)
         }
-        if(g1.left_bumper){
+        if(g1.b){
             newState(clamp.IDOL)
         }
 

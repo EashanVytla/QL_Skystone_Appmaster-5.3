@@ -107,8 +107,8 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
     }
 
     fun start(){
-        deposit.setPosition(0.025)
         turn.setPosition(turnPos_IDOL)
+        deposit.setPosition(0.025)
         unclamp()
         deposit.setPosition(DepositPos_IDOL)
         time.startTime()
@@ -174,6 +174,10 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         grabbed = true
 
         write()
+    }
+
+    fun isGrabbed() : Boolean{
+        return grabbed
     }
 
     fun startKnocker(){
@@ -410,15 +414,13 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
             deposit.setPosition(DepositPos_IDOL)
             clamp()
         }else if(betterFlipState == flip_state.STATE_DEPOSIT){
-            if(time.time() >= 2.0){
-
-            }else{
+            if(time.time() <= 2.0){
                 deposit.setPosition(DepositPos)
             }
         }else if(betterFlipState == flip_state.STATE_DROP) {
             unclamp()
             if(time.time() >= 0.3){
-                deposit.setPosition(DepositPos_IDOL)
+                deposit.setPosition(Deposit_Clearance_DROPPING_Block)
             }
         }else if(betterFlipState == flip_state.STATE_REALLIGN){
             unclamp()

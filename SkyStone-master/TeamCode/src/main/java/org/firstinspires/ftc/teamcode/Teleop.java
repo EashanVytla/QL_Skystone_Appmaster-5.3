@@ -1,10 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Odometry.Dead_Wheel;
 import org.firstinspires.ftc.teamcode.Odometry.MA3_Encoder;
+import org.firstinspires.ftc.teamcode.Odometry.SRX_Encoder;
+import org.firstinspires.ftc.teamcode.Odometry.SRX_Three_Wheel_Localizer;
+import org.firstinspires.ftc.teamcode.Odometry.ThreeWheelTrackingLocalizer;
 import org.firstinspires.ftc.teamcode.Universal.Math.Vector2;
 import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.RevBulkData;
@@ -32,6 +36,30 @@ public class Teleop extends OpMode{
 
     Double prevStrafe = 0.0;
     Tape_Extention tape;
+    SRX_Three_Wheel_Localizer localizer;
+    ThreeWheelTrackingLocalizer odos;
+
+    boolean previous6 = false;
+    boolean previous7 = false;
+    boolean previous8 = false;
+
+    //ZONE 1 BOUNDS
+    final double ZONE1_RIGHTBOUNDS = 0.0;
+    final double ZONE1_LEFTBOUNDS = 0.0;
+    final double ZONE1_UPPERBOUNDS = 0.0;
+
+    //ZONE0 BOUNDS
+    final double ZONE0_RIGHTBOUNDS = 0.0;
+    final double ZONE0_LEFTBOUNDS = 0.0;
+    final double ZONE0_UPPERBOUNDS = 0.0;
+
+    //ZONE2 BOUNDS
+    final double ZONE2_RIGHTBOUNDS = 0.0;
+    final double ZONE2_LEFTBOUNDS = 0.0;
+    final double ZONE2_UPPERBOUNDS = 0.0;
+
+    Pose2d stored_pos = new Pose2d(0.0,0.0,0.0);
+    Pose2d pos = new Pose2d(0.0,0.0,0.0);
 
     public void init(){
         RevExtensions2.init();
@@ -53,19 +81,17 @@ public class Teleop extends OpMode{
         RevBulkData data = hub.getBulkInputData();
         RevBulkData data2 = hub2.getBulkInputData();
 
-        leftWheel = new Dead_Wheel(new MA3_Encoder("a3", hardwareMap, 0.495));
-        rightWheel = new Dead_Wheel(new MA3_Encoder("a4", hardwareMap, 1.365));
-        strafeWheel = new Dead_Wheel(new MA3_Encoder("a1", hardwareMap, 2.464));
-
-        rightWheel.getEncoder().reverse();
-        strafeWheel.getEncoder().reverse();
-        leftWheel.getEncoder().calibrate(data);
-        rightWheel.getEncoder().calibrate(data2);
-        strafeWheel.getEncoder().calibrate(data);
-        leftWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237); //1.5144 0.0361262
-        rightWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237); //1.5204 -0.00305571
-        strafeWheel.setBehavior(1.53642 * 2 * 0.797, 0.0); //1.50608 -0.221642
+        odos = new ThreeWheelTrackingLocalizer(hardwareMap);
+        localizer = new SRX_Three_Wheel_Localizer(new SRX_Encoder("intake_left", hardwareMap), new SRX_Encoder("intake_right", hardwareMap), new SRX_Encoder("lift_2", hardwareMap), hardwareMap, telemetry);
     }
+
+    public enum State{
+        IDLE,
+        AUTOALLIGN,
+        CAPSTONE
+    }
+
+    State automationSt = State.IDLE;
 
     @Override public void start(){
         flipper.start();
@@ -78,20 +104,70 @@ public class Teleop extends OpMode{
         return val;
     }
 
+    public boolean isPress2(boolean value, boolean prev){
+        boolean val = value && !prev;
+        prev = value;
+        return val;
+    }
+
+    int zone = 1;
+
     public void loop(){
         RevBulkData data = hub2.getBulkInputData();
-
+        intake.close();
+        intake.write();
         if (data != null){
             elevator.read(data);
         }
 
+        Pose2d currentPos = odos.getPoseEstimate();
+        odos.update();
+
         if (gamepad1 != null && gamepad2 != null) {
-            drive.drive(gamepad1, gamepad2);
+            //todo: Tune these:
+            if(odos.getPoseEstimate().getY() >= ZONE1_LEFTBOUNDS && odos.getPoseEstimate().getY() <= ZONE1_RIGHTBOUNDS && odos.getPoseEstimate().getX() > ZONE1_UPPERBOUNDS){
+                zone = 1;
+            }else if(odos.getPoseEstimate().getY() >= ZONE0_LEFTBOUNDS && odos.getPoseEstimate().getY() <= ZONE0_RIGHTBOUNDS && odos.getPoseEstimate().getX() > ZONE0_UPPERBOUNDS){
+                zone = 0;
+            }else if(odos.getPoseEstimate().getY() >= ZONE2_LEFTBOUNDS && odos.getPoseEstimate().getY() <= ZONE2_RIGHTBOUNDS && odos.getPoseEstimate().getX() > ZONE2_UPPERBOUNDS){
+                zone = 2;
+            }
+
+            telemetry.addData("Zone: ", zone);
+
+            if(automationSt == State.IDLE){
+                drive.drive(gamepad1, gamepad2);
+                if(isPress2(gamepad1.y, previous6)){
+                    stored_pos = currentPos;
+                }else if(isPress2(gamepad1.left_bumper, previous7)){
+                    pos = new Pose2d(stored_pos.getY(), stored_pos.getX(), stored_pos.getHeading());
+                    automationSt = State.AUTOALLIGN;
+                }else if(isPress2(gamepad1.dpad_left, previous8)){
+                    pos = new Pose2d(stored_pos.getY() + 8, stored_pos.getX(), stored_pos.getHeading());
+                    automationSt = State.CAPSTONE;
+                }else{
+                    automationSt = State.IDLE;
+                }
+            }else if(automationSt == State.AUTOALLIGN){
+                if(gamepad1.left_stick_y >= 0.7){
+                    automationSt = State.IDLE;
+                }else{
+                    localizer.GoTo(pos, 0.3, 0.3, 0.3);
+                }
+            }
+            drive.write();
         }
         else{
             drive.setPower(0.0, 0.0, 0.0);
             drive.write();
         }
+
+        telemetry.addData("current pos: ", currentPos.toString());
+        telemetry.addData("Stored Position: ", stored_pos.toString());
+        telemetry.addData("State: ", automationSt);
+        previous6 = gamepad1.y;
+        previous7 = gamepad1.left_bumper;
+        previous8 = gamepad1.dpad_left;
 
         elevator.operate(gamepad2);
         intake.operate(gamepad1, gamepad2);
@@ -100,7 +176,7 @@ public class Teleop extends OpMode{
         tape.operate(gamepad2);
         //telemetry.addData("DRIVETRAIN MODE", (mode ? "Field Centric" : "Robot Centric"));
         telemetry.addData("DRIVETRAIN MODE", (drive.getMode() ? "Slow Mode" : "Regular Speed"));
-
+        telemetry.addData("Stored Pos: ", drive.getStored_pos().toString());
         //telemetry.addData("1mAngle: ", drive.getExternalHeading());
 
         Vector2 v = new Vector2(gamepad1.left_stick_x, gamepad1.left_stick_y);
