@@ -111,6 +111,7 @@ public class Teleop extends OpMode{
     }
 
     int zone = 1;
+    double heading = 0.0;
 
     public void loop(){
         RevBulkData data = hub2.getBulkInputData();
@@ -132,18 +133,26 @@ public class Teleop extends OpMode{
             }else if(odos.getPoseEstimate().getY() >= ZONE2_LEFTBOUNDS && odos.getPoseEstimate().getY() <= ZONE2_RIGHTBOUNDS && odos.getPoseEstimate().getX() > ZONE2_UPPERBOUNDS){
                 zone = 2;
             }
+            localizer.updateodos();
+
+            if(currentPos.getHeading() <= Math.PI){
+                heading = currentPos.getHeading();
+            }else{
+                heading = -((2 * Math.PI ) - currentPos.getHeading());
+            }
 
             telemetry.addData("Zone: ", zone);
 
             if(automationSt == State.IDLE){
                 drive.drive(gamepad1, gamepad2);
                 if(isPress2(gamepad1.y, previous6)){
-                    stored_pos = currentPos;
+                    stored_pos = new Pose2d(currentPos.getY(), currentPos.getX(), heading);
                 }else if(isPress2(gamepad1.left_bumper, previous7)){
-                    pos = new Pose2d(stored_pos.getY(), stored_pos.getX(), stored_pos.getHeading());
+                    pos = new Pose2d(stored_pos.getX(), stored_pos.getY(), stored_pos.getHeading());
+                    //pos = new Pose2d(0.0, 20.0, 0.0);
                     automationSt = State.AUTOALLIGN;
                 }else if(isPress2(gamepad1.dpad_left, previous8)){
-                    pos = new Pose2d(stored_pos.getY() + 8, stored_pos.getX(), stored_pos.getHeading());
+                    pos = new Pose2d(stored_pos.getX() + 8, stored_pos.getY(), stored_pos.getHeading());
                     automationSt = State.CAPSTONE;
                 }else{
                     automationSt = State.IDLE;
@@ -152,7 +161,7 @@ public class Teleop extends OpMode{
                 if(gamepad1.left_stick_y >= 0.7){
                     automationSt = State.IDLE;
                 }else{
-                    localizer.GoTo(pos, 0.3, 0.3, 0.3);
+                    localizer.GoToTOP(pos, 0.5, 0.5, 0.5);
                 }
             }
             drive.write();
@@ -164,6 +173,7 @@ public class Teleop extends OpMode{
 
         telemetry.addData("current pos: ", currentPos.toString());
         telemetry.addData("Stored Position: ", stored_pos.toString());
+        telemetry.addData("pos: ", pos.toString());
         telemetry.addData("State: ", automationSt);
         previous6 = gamepad1.y;
         previous7 = gamepad1.left_bumper;

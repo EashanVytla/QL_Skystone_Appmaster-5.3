@@ -71,7 +71,7 @@ public class PID_tuner extends OpMode {
             }else {
                 //drive.setPower(0.0,0.0,0.0);
                 //flip.grabPlatform();
-                localizer.GoToRR(new Pose2d(0.0, 0.0, Math.PI/2), 0.5,0.5,0.5);
+                localizer.GoToRR(new Pose2d(-13.0, 40.0, 0.0), 0.5,0.5,0.5);
                 //drive.centricSetPower(0.24,0.0, 0.24, odos.getPoseEstimate().getHeading());
                 //0.3,0.0, 1.0
             }

@@ -66,7 +66,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
     init{
         motors = arrayOf(Caching_Motor(map, "lift_1"), Caching_Motor(map, "lift_2"))
         touch.mode = DigitalChannel.Mode.INPUT
-        motors[1].motor.direction = DcMotorSimple.Direction.REVERSE
+        //motors[1].motor.direction = DcMotorSimple.Direction.REVERSE
         motors.map{
             it.motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             it.motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
@@ -113,20 +113,8 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         motors.map{
             it.motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         }
-        if(!isDropped){
-            when(getBoundaryConditions()){
-                slideBoundary.STATE_OPTIMAL ->
-                    motors.map{ it.setPower(Range.clip(power + 0.1239, -1.0, 1.0)) }
-                slideBoundary.STATE_LOW ->
-                    motors.map { it.setPower(Range.clip(power, -1.0, 1.0)) }
-                slideBoundary.STATE_UNKNOWN ->
-                    motors.map{it.setPower(Range.clip(power, -1.0, 1.0))}
-            }
-        }else if(isDropped){
-            val newPower = Range.clip(power, 0.0, 1.0)
-            motors.map{ it.setPower(newPower)}
-            zero = getLiftHeight() //reset zero by changing perception of encoder values, as resetting the encoders through firmware counts as a hardware transaction, and is therefore inefficient. Think scale indices with a changing key
-        }
+        motors[0].setPower(Range.clip(power, -1.0, 1.0))
+        motors[1].setPower(Range.clip(-power, -1.0, 1.0))
 
         telemetry.addData("Speed Set", power)
     }

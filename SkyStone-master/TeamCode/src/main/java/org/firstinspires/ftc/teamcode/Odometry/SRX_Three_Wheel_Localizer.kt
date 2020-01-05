@@ -107,6 +107,7 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         pidstf = PIDFController(PIDCoefficients(kpstf, kistf, kdstf), kv, ka, kstatic)
         pidr = PIDFController(PIDCoefficients(kpA, kiA, kdA))
 
+
         /*
         strprofile = MotionProfileGenerator.generateSimpleMotionProfile(
                 MotionState(0.0, 0.0, 0.0),
@@ -146,7 +147,7 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
 
         //val state = strprofile[time]
         val powerstr = pidstr.update(currentPos.x/*, state.v, state.a*/)
-        telemetry.addData("power", powerstr)
+        telemetry.addData("current pos: ", odos.poseEstimate.toString())
 
         left.update(data)
         right.update(data)
@@ -155,6 +156,43 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         drive.centricSetPower(-powerstr, pidstf.update(-currentPos.y), pidr.update(heading), currentPos.heading)
 
         drive.write()
+    }
+
+    fun GoToTOP(position: Pose2d, strspeed : Double, stfspeed : Double, rspeed : Double){
+        pidstr.setOutputBounds(-strspeed, strspeed)
+        pidstf.setOutputBounds(-stfspeed, stfspeed)
+        pidr.setOutputBounds(-rspeed, rspeed)
+
+        val data = hub.bulkInputData
+        val currentPos = odos.poseEstimate
+        odos.update()
+
+        if(currentPos.heading <= Math.PI){
+            heading = currentPos.heading
+        }else{
+            heading = -((2 * Math.PI ) - currentPos.heading)
+        }
+        telemetry.addData("heading: ", heading)
+
+        pidr.targetPosition = position.heading
+        pidstr.targetPosition = position.y
+        pidstf.targetPosition = position.x
+
+        //val state = strprofile[time]
+        val powerstr = pidstr.update(currentPos.x/*, state.v, state.a*/)
+        telemetry.addData("current pos: ", odos.poseEstimate.toString())
+
+        left.update(data)
+        right.update(data)
+        strafe.update(data)
+
+        drive.centricSetPower(-powerstr, pidstf.update(-currentPos.y), pidr.update(heading), currentPos.heading)
+
+        drive.write()
+    }
+
+    fun updateodos(){
+        odos.update()
     }
 
     fun getForwardDist() : Double{

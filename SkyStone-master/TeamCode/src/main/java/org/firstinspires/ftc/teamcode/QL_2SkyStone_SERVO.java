@@ -183,7 +183,7 @@ public class QL_2SkyStone_SERVO extends OpMode {
                         memo = Math.abs(getStrafeDist());
                         newState(State.STATE_PICKUP);
                     }else{
-                        localizer.GoTo(drive_to_block_target,0.50,0.5,0.5);
+                        localizer.GoTo(drive_to_block_target,0.5,0.5,0.5);
                     }
                 }else{
                     localizer.GoTo(drive_to_block_target,0.5,0.5,0.5);
