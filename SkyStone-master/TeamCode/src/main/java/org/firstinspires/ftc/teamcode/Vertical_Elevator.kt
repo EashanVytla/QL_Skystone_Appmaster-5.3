@@ -98,9 +98,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
     }
 
     fun read(data : RevBulkData){
-        motors.map {
-            it.read(data)
-        }
+        motors[0].read(data)
         isDropped = !data.getDigitalInputState(touch)
     }
 

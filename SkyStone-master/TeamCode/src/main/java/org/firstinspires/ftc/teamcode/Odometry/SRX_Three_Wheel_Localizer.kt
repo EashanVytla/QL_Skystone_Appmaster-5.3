@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.Mecanum_Drive
 import org.firstinspires.ftc.teamcode.Universal.Math.Pose
 import org.firstinspires.ftc.teamcode.Universal.Math.Vector2D
 import org.openftc.revextensions2.ExpansionHubEx
+import org.openftc.revextensions2.RevBulkData
 import org.openftc.revextensions2.RevExtensions2
 import kotlin.math.abs
 
@@ -36,7 +37,7 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
     var hub: ExpansionHubEx
     var hub2: ExpansionHubEx
     var currentPos = Pose2d(0.0, 0.0, 0.0)
-    var odos : ThreeTrackingWheelLocalizer
+    var odos : ThreeWheelTrackingLocalizer
 
     //Rotational straight line coefficients
     val kpr = 0.6
@@ -118,6 +119,16 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         )
          */
     }
+    var inverse = false
+
+    fun inverse(){
+        inverse = true
+    }
+
+    fun update(data : RevBulkData){
+        odos.dataUpdate(data)
+        odos.update()
+    }
 
     fun reset(){
         pidstr.reset()
@@ -130,9 +141,11 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         pidstf.setOutputBounds(-stfspeed, stfspeed)
         pidr.setOutputBounds(-rspeed, rspeed)
 
-        val data = hub.bulkInputData
-        val currentPos = odos.poseEstimate
-        odos.update()
+        if(inverse){
+            currentPos = Pose2d(odos.poseEstimate.x, -odos.poseEstimate.y, odos.poseEstimate.heading)
+        }else{
+            currentPos = odos.poseEstimate
+        }
 
         if(currentPos.heading <= Math.PI){
             heading = currentPos.heading
@@ -147,11 +160,7 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
 
         //val state = strprofile[time]
         val powerstr = pidstr.update(currentPos.x/*, state.v, state.a*/)
-        telemetry.addData("current pos: ", odos.poseEstimate.toString())
-
-        left.update(data)
-        right.update(data)
-        strafe.update(data)
+        telemetry.addData("current pos: ", currentPos.toString())
 
         drive.centricSetPower(-powerstr, pidstf.update(-currentPos.y), pidr.update(heading), currentPos.heading)
 
@@ -163,9 +172,7 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         pidstf.setOutputBounds(-stfspeed, stfspeed)
         pidr.setOutputBounds(-rspeed, rspeed)
 
-        val data = hub.bulkInputData
         val currentPos = odos.poseEstimate
-        odos.update()
 
         if(currentPos.heading <= Math.PI){
             heading = currentPos.heading
@@ -181,10 +188,6 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         //val state = strprofile[time]
         val powerstr = pidstr.update(currentPos.x/*, state.v, state.a*/)
         telemetry.addData("current pos: ", odos.poseEstimate.toString())
-
-        left.update(data)
-        right.update(data)
-        strafe.update(data)
 
         drive.centricSetPower(-powerstr, pidstf.update(-currentPos.y), pidr.update(heading), currentPos.heading)
 

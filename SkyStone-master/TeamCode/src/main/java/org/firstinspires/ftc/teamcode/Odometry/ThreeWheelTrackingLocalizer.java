@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.jetbrains.annotations.NotNull;
+import org.openftc.revextensions2.RevBulkData;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +21,8 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
 
     private DcMotor leftEncoder, rightEncoder, frontEncoder;
 
+    private int[] positions = {0, 0, 0};
+
     public ThreeWheelTrackingLocalizer(HardwareMap hardwareMap) {
         super(Arrays.asList(
                 new Pose2d(0, LATERAL_DISTANCE / 2, 0), // left
@@ -32,16 +35,26 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
         frontEncoder = hardwareMap.dcMotor.get("lift_2");
     }
 
+    public void setPos(Pose2d pos){
+        this.setPoseEstimate(pos);
+    }
+
     public static double encoderTicksToInches(int ticks) {
         return WHEEL_RADIUS * 2 * Math.PI * GEAR_RATIO * ticks / TICKS_PER_REV;
+    }
+
+    public void dataUpdate(RevBulkData data){
+        positions[0] = data.getMotorCurrentPosition(leftEncoder);
+        positions[1] = data.getMotorCurrentPosition(rightEncoder);
+        positions[2] = data.getMotorCurrentPosition(frontEncoder);
     }
 
     @Override
     public List<Double> getWheelPositions() {
         return Arrays.asList(
-                encoderTicksToInches(leftEncoder.getCurrentPosition()),
-                encoderTicksToInches(rightEncoder.getCurrentPosition()),
-                encoderTicksToInches(-frontEncoder.getCurrentPosition())
+                encoderTicksToInches(positions[0]),
+                encoderTicksToInches(positions[1]),
+                encoderTicksToInches(-positions[2])
         );
     }
 }

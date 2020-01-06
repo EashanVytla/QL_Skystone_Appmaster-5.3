@@ -26,15 +26,15 @@ import org.openftc.revextensions2.RevExtensions2;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_HEIGHT;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_WIDTH;
 
-@Autonomous(name = "QL_SkyStone_Blue", group = "Competition")
-public class QL_Skystone_Auto_Intake extends OpMode {
+@Autonomous(name = "QL_SkyStone_Red", group = "Competition")
+public class QL_Skystone_Auto_Intake_red extends OpMode {
     int SkystonePos;
 
     public OpenCvCamera webcam;
     //MultipleTelemetry telemetry;
     SkystoneDetectorPipeline pipeline;
 
-    ThreeWheelTrackingLocalizer odos;
+    ThreeTrackingWheelLocalizer odos;
     SRX_Three_Wheel_Localizer localizer;
     Vertical_Elevator slides;
 
@@ -103,9 +103,7 @@ public class QL_Skystone_Auto_Intake extends OpMode {
         slides = new Vertical_Elevator(hardwareMap, telemetry);
         localizer = new SRX_Three_Wheel_Localizer(new SRX_Encoder("intake_left", hardwareMap), new SRX_Encoder("intake_right", hardwareMap), new SRX_Encoder("lift_2", hardwareMap), hardwareMap, telemetry);
         odos = new ThreeWheelTrackingLocalizer(this.hardwareMap);
-
-        odos.setPoseEstimate(new Pose2d(0, 0, Math.PI / 2));
-        localizer.getOdos().setPoseEstimate(new Pose2d(0, 0, Math.PI / 2));
+        localizer.inverse();
     }
 
     @Override
@@ -152,49 +150,49 @@ public class QL_Skystone_Auto_Intake extends OpMode {
 
     public void loop(){
         RevBulkData data = hub2.getBulkInputData();
-        SkystonePos = 0;
+        SkystonePos = 1;
         flip.read();
-        odos.dataUpdate(data);
+        odos.
         odos.update();
-        localizer.update(data);
         Pose2d currentPos = odos.getPoseEstimate();
 
         if(SkystonePos == 0){
-            cross_target = new Pose2d(-25, -90, -Math.PI/2);
-            drive_to_block_target = new Pose2d(-29, 12.0, Math.PI/4 - Math.toRadians(5.0));
-            return_target = new Pose2d(-24, -11.0, Math.PI/4 + Math.toRadians(10.0));
-            exit_pool = new Pose2d(-22, -10.5, 0.0);
-            drive_to_block_target2 = new Pose2d(-21, -2.0, Math.PI/4);
-            intake1 = new Pose2d(-33, 18, Math.PI/4 - Math.toRadians(5.0));
-            intake2 = new Pose2d(-36, -4, Math.PI/4);
-            return_target2 = new Pose2d(-25, -13.0, Math.PI/4 + Math.toRadians(10.0));
+            cross_target = new Pose2d(25, -90, -Math.PI/2);
+            drive_to_block_target = new Pose2d(29, 12.0, Math.PI/4 - Math.toRadians(5.0));
+            return_target = new Pose2d(23, -11.0, Math.PI/4 + Math.toRadians(10.0));
+            exit_pool = new Pose2d(22, -10.5, 0.0);
+            drive_to_block_target2 = new Pose2d(21, -2.0, Math.PI/4);
+            intake1 = new Pose2d(33, 18, Math.PI/4 - Math.toRadians(5.0));
+            intake2 = new Pose2d(35, -4, Math.PI/4);
+            return_target2 = new Pose2d(25, -13.0, Math.PI/4 + Math.toRadians(10.0));
         }else if(SkystonePos == 1){
-            cross_target = new Pose2d(-25, -90, -Math.PI/2);
-            drive_to_block_target = new Pose2d(-29, 6.0, Math.PI/4);
-            return_target = new Pose2d(-23, -19.0, Math.PI/4 + Math.toRadians(10.0));
-            exit_pool = new Pose2d(-22, -10.5, 0.0);
-            drive_to_block_target2 = new Pose2d(-25, -2.0, Math.PI/4);
-            intake1 = new Pose2d(-33, 18, Math.PI/4);
-            intake2 = new Pose2d(-35, -11, Math.PI/4);
-            return_target2 = new Pose2d(-25, -13.0, Math.PI/4 + Math.toRadians(10.0));
+            cross_target = new Pose2d(25, -90, -Math.PI/2);
+            drive_to_block_target = new Pose2d(29, 6.0, Math.PI/4);
+            return_target = new Pose2d(23, -19.0, Math.PI/4 + Math.toRadians(10.0));
+            exit_pool = new Pose2d(22, -10.5, 0.0);
+            drive_to_block_target2 = new Pose2d(25, -2.0, Math.PI/4);
+            intake1 = new Pose2d(33, 18, Math.PI/4);
+            intake2 = new Pose2d(35, -11, Math.PI/4);
+            return_target2 = new Pose2d(25, -13.0, Math.PI/4 + Math.toRadians(10.0));
         }else if(SkystonePos == 2){
-            cross_target = new Pose2d(-25, -90, -Math.PI/2);
-            drive_to_block_target = new Pose2d(-29, -2.0, Math.PI/4);
-            return_target = new Pose2d(-23, -27.0, Math.PI/4 + Math.toRadians(10.0));
-            exit_pool = new Pose2d(-22, -10.5, 0.0);
-            drive_to_block_target2 = new Pose2d(-25, -2.0, Math.PI/4);
-            intake1 = new Pose2d(-33, 10, Math.PI/4);
-            intake2 = new Pose2d(-35, -18, Math.PI/4);
-            return_target2 = new Pose2d(-25, -13.0, Math.PI/4 + Math.toRadians(10.0));
+            cross_target = new Pose2d(25, -90, -Math.PI/2);
+            drive_to_block_target = new Pose2d(29, -2.0, Math.PI/4);
+            return_target = new Pose2d(23, -27.0, Math.PI/4 + Math.toRadians(10.0));
+            exit_pool = new Pose2d(22, -10.5, 0.0);
+            drive_to_block_target2 = new Pose2d(25, -2.0, Math.PI/4);
+            intake1 = new Pose2d(33, 10, Math.PI/4);
+            intake2 = new Pose2d(35, -18, Math.PI/4);
+            return_target2 = new Pose2d(25, -13.0, Math.PI/4 + Math.toRadians(10.0));
         }
 
         switch (mRobotState) {
             case STATE_SETUP:
-                if(mStateTime.time() >= 1.0){
+                if(mStateTime.time() >= 1.5){
                     newState(State.STATE_DRIVE_TO_BLOCK);
                 }else{
                     intake.kickout();
                     intake.open();
+                    flip.start();
                 }
                 break;
             case STATE_DRIVE_TO_BLOCK:
@@ -207,18 +205,14 @@ public class QL_Skystone_Auto_Intake extends OpMode {
                         localizer.GoTo(drive_to_block_target, 0.5, 0.5, 0.5);
                     }
                 }else{
-                    flip.start();
                     intake.setPower(0.0);
-                    //intake.close();
+                    intake.close();
                     localizer.GoTo(drive_to_block_target, 0.5, 0.5, 0.5);
                     mStateTime.reset();
                 }
-                if (delay.time() >= 1.0){
-                    intake.close();
-                }
                 break;
             case STATE_INTAKE:
-                if(Math.abs(intake1.getX() + currentPos.getY()) <= 1.5 && delay.time() >= 2.0 || flip.IntakeFeedback()){
+                if(Math.abs(intake1.getX() + currentPos.getY()) <= 1.5 && delay.time() >= 2.0){
                     drive.setPower(0.0, 0.0, 0.0);
                     newState(State.STATE_EXIT_POOL);
                 }else{
@@ -228,13 +222,7 @@ public class QL_Skystone_Auto_Intake extends OpMode {
                     if(flip.IntakeFeedback()){
                         intake.setPower(0.0);
                     }else{
-                        if (mStateTime.time() <= 1.0) {
-                            intake.setPower(0.3);
-                        } else if (mStateTime.time() > 1.0 && mStateTime.time() <= 1.4) {
-                            intake.setPower(-0.3);
-                        } else if (mStateTime.time() > 1.4) {
-                            intake.setPower(0.3);
-                        }
+                        intake.setPower(0.3);
                     }
 
                         /*
@@ -264,8 +252,13 @@ public class QL_Skystone_Auto_Intake extends OpMode {
                 break;
             case STATE_EXIT_POOL:
                 if(Math.abs(exit_pool.getY() - currentPos.getX()) <= 3.0) {
-                    localizer.GoTo(exit_pool, 0.5, 0.5, 0.5);
-                }else if(delay.time() >= 1.0){
+                    if(mStateTime.time() >= 0.5){
+                        drive.setPower(0.0,0.0,0.0);
+                        newState(State.STATE_CROSS);
+                    }else{
+                        localizer.GoTo(exit_pool, 0.5, 0.5, 0.5);
+                    }
+                }else if(delay.time() >= 3.0){
                     drive.setPower(0.0,0.0,0.0);
                     newState(State.STATE_CROSS);
                 }else{
@@ -312,26 +305,17 @@ public class QL_Skystone_Auto_Intake extends OpMode {
                      */
                     intake.setPower(0.15);
 
-                    if(SkystonePos == 0){
-                        if(currentPos.getX() <= -35){
-                            localizer.GoTo(cross_target, 0.7, 0.7, 0.8);
-                        }else{
-                            localizer.GoTo(new Pose2d(cross_target.getX(), cross_target.getY(), 0.0), 0.7, 0.7, 0.7);
-                        }
+                    if(currentPos.getX() <= -35){
+                        localizer.GoTo(cross_target, 0.5, 0.5, 0.8);
                     }else{
-                        if(currentPos.getX() <= -35){
-                            localizer.GoTo(cross_target, 0.5, 0.5, 0.8);
-                        }else{
-                            localizer.GoTo(new Pose2d(cross_target.getX(), cross_target.getY(), 0.0), 0.5, 0.5, 0.8);
-                        }
+                        localizer.GoTo(new Pose2d(cross_target.getX(), cross_target.getY(), 0.0), 0.5, 0.5, 0.5);
                     }
-
                     mStateTime.reset();
 
-                    if(currentPos.getX() <= -65) {
+                    if(currentPos.getX() <= -60) {
                         intake.open();
                         flip.unclamp();
-                        flip.operate(3);
+                        flip.operate(4);
                     }
                 }
                 telemetry.addData("Is Grabbed? ", flip.isGrabbed());
@@ -352,23 +336,18 @@ public class QL_Skystone_Auto_Intake extends OpMode {
                     mStateTime.reset();
                 }
                  */
-                if(mStateTime.time() >= 1.5) {
-                    intake.close();
+                if(mStateTime.time() >= 2.5) {
                     drive.setPower(0.0,0.0,0.0);
                     newState(State.STATE_GRAB_FOUNDATION);
                 }else{
-                    intake.open();
-                    flip.flipDown();
-                    flip.clamp();
                     localizer.GoTo(new Pose2d(-32, -90, -Math.PI/2), 0.15, 0.15, 0.15);
                 }
                 break;
             case STATE_GRAB_FOUNDATION:
-                if(mStateTime.time() >= 1.2){
+                if(mStateTime.time() >= 0.5){
                     newState(State.STATE_PULL_FORWARD);
                 }else{
                     flip.grabPlatform();
-                    //flip.operate(0);
                 }
                 break;
             case STATE_PULL_FORWARD:
@@ -383,20 +362,23 @@ public class QL_Skystone_Auto_Intake extends OpMode {
                     drive.setPower(0.0,0.0,0.0);
                     newState(State.STATE_TURN);
                 }else{
-                    //flip.operate(1);
+                    flip.operate(2);
                     localizer.GoTo(new Pose2d(-9, -90, -Math.PI/2), 1.0, 1.0, 1.0);
                     mStateTime.reset();
                 }
                 break;
             case STATE_TURN:
                 if(getHeading() >= 0.0) {
-                    flip.resetPlatform();
-                    drive.setPower(0.0,0.0,0.0);
-                    saved_deposit = new Pose2d(-((currentPos.getY() * 1.3030303) + 0.75), currentPos.getX() - 2, 0.0);
-                    newState(State.STATE_DEPOSIT);
+                    if(mStateTime.time() >= 0.5){
+                        flip.resetPlatform();
+                        drive.setPower(0.0,0.0,0.0);
+                        newState(State.STATE_DEPOSIT);
+                    }else{
+                        //drive.targetTurnPlatform(0.0, odos.getPoseEstimate().getHeading());
+                        localizer.GoTo(new Pose2d(-9, -85, Math.PI/4), 0.5, 0.5, 1.0);
+                    }
                 }else{
                     //drive.targetTurnPlatform(0.0, odos.getPoseEstimate().getHeading());
-                    flip.operate(2);
                     localizer.GoTo(new Pose2d(-9, -85, Math.PI/4), 0.5, 0.5, 1.0);
                     mStateTime.reset();
                 }
@@ -404,7 +386,6 @@ public class QL_Skystone_Auto_Intake extends OpMode {
             case STATE_DEPOSIT:
                 if(mStateTime.time() >= 1.2){
                     if(mStateTime.time() >= 2.0){
-                        flip.unclamp();
                         saved_deposit = new Pose2d(-((currentPos.getY() * 1.3030303) + 0.75), currentPos.getX() - 2, 0.0);
                         newState(State.STATE_RETURN);
                     }else{
@@ -461,7 +442,7 @@ public class QL_Skystone_Auto_Intake extends OpMode {
                 }
                 break;
             case STATE_INTAKE2:
-                if(Math.abs(intake2.getX() + currentPos.getY()) <= 3.0 || flip.IntakeFeedback()){
+                if(Math.abs(intake2.getX() + currentPos.getY()) <= 3.0){
                     if(mStateTime.time() >= 0.5){
                         drive.setPower(0.0, 0.0, 0.0);
                         intake.setPower(0.15);
@@ -469,14 +450,6 @@ public class QL_Skystone_Auto_Intake extends OpMode {
                     }else{
                         localizer.GoTo(intake2, 0.15, 0.15, 0.15);
                         intake.close();
-                        localizer.GoTo(intake1, 0.15, 0.15, 0.15);
-                        if(flip.IntakeFeedback()){
-                            intake.setPower(0.0);
-                        }else{
-                            intake.setPower(0.3);
-                        }
-
-                        /*
                         if(mStateTime.time() <= 1.5){
                             intake.setPower(0.3);
                         }else if(mStateTime.time() > 1.5 && mStateTime.time() <= 1.7){
@@ -484,16 +457,8 @@ public class QL_Skystone_Auto_Intake extends OpMode {
                         }else if(mStateTime.time() > 1.7){
                             intake.setPower(0.3);
                         }
-
-                         */
                     }
-                }
-                else if (delay.time() >= 2.5){
-                    drive.setPower(0.0, 0.0, 0.0);
-                    intake.setPower(0.15);
-                    newState(State.STATE_HANDSHAKE2);
-                }
-                else{
+                }else{
                     //drive.setPower(-0.15, 0.0, 0.0);
                     localizer.GoTo(intake2, 0.15, 0.15, 0.15);
                     mStateTime.reset();
@@ -516,40 +481,39 @@ public class QL_Skystone_Auto_Intake extends OpMode {
                 }
                 break;
             case STATE_CROSS2:
-                if(Math.abs(saved_deposit.getY() - currentPos.getX()) <= 4.0) {
+                if(Math.abs(saved_deposit.getY() - currentPos.getX()) <= 2.0) {
                     if(mStateTime.time() >= 0.5){
                         flip.flipDown();
                         intake.open();
                         drive.setPower(0.0,0.0,0.0);
-                        flip.operate(1);
                         newState(State.STATE_DEPOSIT2);
                     }else{
                         //localizer.GoTo(new Pose2d(exit_pool.getX(), -80, 0.0), 0.5, 0.5, 0.8);
                         localizer.GoTo(saved_deposit, 0.6, 0.6, 0.6);
                     }
-                }else if(delay.time() >= 3.0){
+                }else if(delay.time() >= 4.0){
                     flip.flipDown();
                     intake.open();
                     drive.setPower(0.0,0.0,0.0);
-                    //newState(State.STATE_);
+                    newState(State.STATE_DEPOSIT2);
                 }else{
                     flip.clamp();
                     flip.flipDown();
-                    flip.operate(0);
                     intake.open();
                     localizer.GoTo(saved_deposit, 0.6,0.6,0.6);
                     mStateTime.reset();
                 }
                 break;
             case STATE_DEPOSIT2:
-                if(mStateTime.time() >= 1.2){
-                    if(mStateTime.time() >= 1.7){
+                if(mStateTime.time() >= 2.0){
+                    if(mStateTime.time() >= 2.0){
                         newState(State.STATE_PARK);
                     }else{
                         flip.operate(1);
                     }
                 }else{
                     //slides.PIDController(1);
+                    flip.operate(0);
                     localizer.GoTo(saved_deposit, 0.7, 0.7, 1.0);
                 }
                 break;

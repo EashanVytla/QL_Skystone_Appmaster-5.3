@@ -133,13 +133,26 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         dist = sensorDistance.getDistance(DistanceUnit.CM)
     }
 
+    fun getCDDist() : Double{
+        dist = sensorDistance.getDistance(DistanceUnit.CM)
+        return dist
+    }
+
+    fun IntakeFeedback() : Boolean{
+        if((dist >= 6.5 && dist <= 9.25) || dist >= 13.0 && dist <= 16.0){
+            return true
+        }else{
+            return false
+        }
+    }
+
     fun newState(flipState: flip_state){
         betterFlipState = flipState
         time.reset()
 
     }
 
-    private fun getCase() : Int{
+    fun getCase() : Int{
         read()
         if ((dist >= 6.5 && dist <= 9.25) || (dist >= 13.0)) {
             //Case regular
