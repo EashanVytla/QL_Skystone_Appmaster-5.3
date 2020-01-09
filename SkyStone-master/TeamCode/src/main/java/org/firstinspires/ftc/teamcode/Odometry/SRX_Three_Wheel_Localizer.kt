@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Odometry
 import com.acmerobotics.roadrunner.control.PIDCoefficients
 import com.acmerobotics.roadrunner.control.PIDFController
 import com.acmerobotics.roadrunner.geometry.Pose2d
+import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.acmerobotics.roadrunner.localization.ThreeTrackingWheelLocalizer
 import com.acmerobotics.roadrunner.profile.MotionProfile
 import com.acmerobotics.roadrunner.profile.MotionProfileGenerator
@@ -141,11 +142,8 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         pidstf.setOutputBounds(-stfspeed, stfspeed)
         pidr.setOutputBounds(-rspeed, rspeed)
 
-        if(inverse){
-            currentPos = Pose2d(odos.poseEstimate.x, -odos.poseEstimate.y, odos.poseEstimate.heading)
-        }else{
-            currentPos = odos.poseEstimate
-        }
+
+        currentPos = odos.poseEstimate
 
         if(currentPos.heading <= Math.PI){
             heading = currentPos.heading
@@ -154,9 +152,17 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         }
         telemetry.addData("heading: ", heading)
 
-        pidr.targetPosition = position.heading
-        pidstr.targetPosition = position.y
-        pidstf.targetPosition = position.x
+        if (inverse) {
+            pidr.targetPosition = -position.heading
+            pidstr.targetPosition = position.y
+            pidstf.targetPosition = -position.x
+        }
+        else{
+            pidr.targetPosition = position.heading
+            pidstr.targetPosition = position.y
+            pidstf.targetPosition = position.x
+        }
+
 
         //val state = strprofile[time]
         val powerstr = pidstr.update(currentPos.x/*, state.v, state.a*/)
@@ -164,6 +170,38 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
 
         drive.centricSetPower(-powerstr, pidstf.update(-currentPos.y), pidr.update(heading), currentPos.heading)
 
+        drive.write()
+    }
+
+    var dtA = 0.0
+    var rangleA = 0.0
+    var headingerrorA =  0.0
+    var integralErrorA = 0.0
+    var prevheadingA = 0.0
+
+    fun targetTurnPlatform(targetAngle : Double, currentHeading : Double){
+        dtA = (System.currentTimeMillis() - prev_time).toDouble()
+        prev_time = System.currentTimeMillis()
+        rangleA = currentHeading
+        headingerrorA = targetAngle - rangleA
+
+        if (abs(headingerrorA) > Math.toRadians(180.0)){
+            if (headingerrorA > 0) {
+                headingerrorA = -((Math.PI * 2) - abs(headingerrorA))
+            }
+            else{
+                headingerrorA = ((Math.PI * 2) - abs(headingerrorA))
+            }
+        }
+
+        val prop = headingerrorA
+        val power = prop
+        if (Math.abs(power) < 0.3) {
+            integralErrorA += headingerrorA
+        }
+        prevheadingA = headingerrorA
+
+        drive.centricSetPower(0.0, 0.0, Range.clip(power, -1.0, 1.0), currentHeading)
         drive.write()
     }
 

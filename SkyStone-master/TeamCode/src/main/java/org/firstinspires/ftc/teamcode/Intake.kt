@@ -76,8 +76,8 @@ class Intake(hardwareMap: HardwareMap) {
     }
 
     fun close(){
-        open[0].setPosition(0.7) //0.7
-        open[1].setPosition(0.25) //0.2
+        open[0].setPosition(0.575) //0.7 //todo: LOWER TO INCREASE TIGHTNESS
+        open[1].setPosition(0.25) //0.25 //todo: HIGHER TO INCREASE TIGHTNESS
     }
 
     fun newState(clampState: clamp){
@@ -88,7 +88,7 @@ class Intake(hardwareMap: HardwareMap) {
     fun operate(g1 : Gamepad, g2: Gamepad){
         setPower((0.35 * g1.right_trigger) - (0.2 * g1.left_trigger))
 
-        if(g2.b){
+        if(g2.left_bumper){
             newState(clamp.OPEN)
         }
         if(g1.b){
@@ -97,14 +97,17 @@ class Intake(hardwareMap: HardwareMap) {
 
 
         if(clampst == clamp.OPEN){
-            if (time.time() <= 4.0){
-                open()
+            val wait_time = when{
+                Flipper.rcase != 0 -> 3.0
+                else -> 2.0
             }
-            else{
-                clampst = clamp.IDOL
+            if (time.time() <= wait_time) {
+                open()
+            } else {
+                newState(clamp.IDOL)
             }
         }else if(clampst == clamp.IDOL){
-            if(g1.left_bumper){
+            if(g1.b){
                 open()
             }else{
                 close()

@@ -21,15 +21,16 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
     var telemetry = t
     var isDropped = false
     var touch = map.get(DigitalChannel::class.java, "touch")
+    val DROPDOWNPOS = 270
 
     var zero = 0.0
 
     var time = ElapsedTime()
     var clicks = 0
 
-    var stack_count = 0
+    var stack_count = 1
 
-    var TargetPos = arrayOf(0, 570, 999, 1500, 1942, 2367, 2664, 3051, 3493, 3867, 4225)//arrayOf(10, 50, 113, 205, 285, 365, 445, 520, 605, 760, 841, 918)
+    var TargetPos = arrayOf(0, 570, 999, 1500, 1942, 2367, 2689, 3071, 3513, 3887, 4245)//arrayOf(10, 50, 113, 205, 285, 365, 445, 520, 605, 760, 841, 918)
 
     var fine_tune = 1.0
     var error = 0.0
@@ -40,6 +41,8 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
 
     var holdTime = ElapsedTime()
     var mStateTime = ElapsedTime()
+
+    var gff = 0.1
 
     companion object{
         const val kp = 0.004
@@ -111,8 +114,8 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         motors.map{
             it.motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         }
-        motors[0].setPower(Range.clip(power, -1.0, 1.0))
-        motors[1].setPower(Range.clip(-power, -1.0, 1.0))
+        motors[0].setPower(Range.clip(power + gff, -1.0, 1.0))
+        motors[1].setPower(Range.clip(-power - gff, -1.0, 1.0))
 
         telemetry.addData("Speed Set", power)
     }
@@ -157,36 +160,40 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
     }
 
     fun setTargetPosBasic(target: Int, power: Double){
-        motors.map {
-            if(stack_count > 1){
-                it.motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE)
-                if(getLiftHeight() < (target)){
-                    it.motor.power = power
-                }else if(getLiftHeight() >= (target)) {
-                    it.motor.power = 0.3
-                }
-            }else if(stack_count <= 1){
-                it.motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE)
-                if(getLiftHeight() < target){
-                    it.motor.power = power
-                }else if(getLiftHeight() >= target) {
-                    it.motor.power = 0.3
-                }
+        if(stack_count > 1){
+            //it.motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE)
+            if(getLiftHeight() < (target)){
+                setPower(power)
+            }else if(getLiftHeight() >= (target)) {
+                setPower(0.2)
             }
-            if(power <= 0.0){
-                telemetry.addData("State:", "Dropping")
-                if(getLiftHeight() - target >= 10){
-                    it.motor.power = power
-                }else {
-                    it.motor.power = 0.0
-                }
+        }else if(stack_count <= 1){
+            //it.motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE)
+            if(getLiftHeight() < target){
+                setPower(power)
+            }else if(getLiftHeight() >= target) {
+                setPower(0.2)
+            }
+        }
+        if(power <= 0.0){
+            telemetry.addData("State:", "Dropping")
+            if(getLiftHeight() >= DROPDOWNPOS){
+                setPower(power)
+            }else {
+                setPower(0.0)
             }
         }
     }
 
     fun operate(g : Gamepad){
-        motors.map{
+        motors.map {
             it.motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        }
+        if (getLiftHeight() < DROPDOWNPOS) {
+            gff = 0.0
+        }
+        else{
+            gff = 0.1
         }
         if (g.x){
             newState(slideState.STATE_RAISE)
@@ -254,8 +261,8 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         }
         else if (mSlideState == slideState.STATE_DROP){
             fine_tune = 1.0
-            setTargetPosBasic(20, -1.0)
-            if(getLiftHeight() <= 2){
+            setTargetPosBasic(DROPDOWNPOS, -1.0)
+            if(getLiftHeight() <= DROPDOWNPOS){
                 newState(slideState.STATE_IDLE)
             }
         }

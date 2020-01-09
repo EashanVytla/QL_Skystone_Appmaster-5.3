@@ -22,7 +22,6 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
     var turnPos = 0.5
     var sensorDistance: DistanceSensor
     var dist = 0.0
-    var rcase = 0
     var knocker = false
 
     var previous = false
@@ -39,6 +38,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
 
     companion object {
         var capped = false
+        var rcase = 0
         const val case_right_turn_value = 0.795
         const val case_left_turn_value = 0.17
         const val case_center_turn_value = 0.52
@@ -170,6 +170,10 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         return rcase
     }
 
+    fun getRCase() : Int{
+        return rcase
+    }
+
     fun flip(){
         unclamp()
         if(time.time() >= 0.5){ //Wait for setup procedure before flipping
@@ -182,7 +186,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
     }
 
     fun grabPlatform(){
-        leftpm.setPosition(0.95)
+        leftpm.setPosition(1.0)
         rightpm.setPosition(0.0)
         grabbed = true
 
@@ -203,7 +207,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
     }
 
     fun resetPlatform(){
-        leftpm.setPosition(0.3)
+        leftpm.setPosition(0.2)
         rightpm.setPosition(0.65)
         grabbed = false
         knocker = false
@@ -228,6 +232,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
             if(g2.b){
                 newState(flip_state.STATE_IDLE)
             }
+        /*
             if(isPress(g1.y, prevknocker)){
                 if(knocker){
                     resetPlatform()
@@ -238,6 +243,8 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
                 }
             }
             prevknocker = g1.y
+
+         */
             if(isPress(g1.a, previous)){
                 if(grabbed){
                     resetPlatform()
@@ -369,7 +376,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         if(sequence == 0){
             newState(flip_state.STATE_DEPOSIT)
         }
-        if(sequence == 1){
+        if(sequence == 1 && prev_sequence != 1){
             newState(flip_state.STATE_DROP)
         }
         if(sequence == 2){
@@ -433,6 +440,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         }else if(betterFlipState == flip_state.STATE_DROP) {
             unclamp()
             if(time.time() >= 0.3){
+                t.addData("Clearing Stone: ", Deposit_Clearance_DROPPING_Block);
                 deposit.setPosition(Deposit_Clearance_DROPPING_Block)
             }
         }else if(betterFlipState == flip_state.STATE_REALLIGN){

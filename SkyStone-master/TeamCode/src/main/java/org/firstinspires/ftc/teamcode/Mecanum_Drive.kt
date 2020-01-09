@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode
 
+import com.acmerobotics.roadrunner.control.PIDCoefficients
+import com.acmerobotics.roadrunner.control.PIDFController
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.qualcomm.hardware.bosch.BNO055IMU
@@ -12,9 +14,6 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.Range
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation
-import org.firstinspires.ftc.teamcode.Odometry.Dead_Wheel
-import org.firstinspires.ftc.teamcode.Odometry.SRX_Encoder
-import org.firstinspires.ftc.teamcode.Odometry.SRX_Three_Wheel_Localizer
 import org.firstinspires.ftc.teamcode.Odometry.ThreeWheelTrackingLocalizer
 import org.firstinspires.ftc.teamcode.Universal.Math.Pose
 import org.firstinspires.ftc.teamcode.Universal.Math.Vector2
@@ -72,6 +71,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var previous4 = false
     var previous5 = false
     var slow_mode = false
+    var previous6 = false
 
     //var pid: PID
 
@@ -87,30 +87,55 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var flipper : Flipper
 
     //Rotational straight line coefficients
-    val kpr = 0.9
+    val kpr = 0.6
     val kir = 0.0
     val kdr = 0.0
+
+    //Turn Coefficients
+    val kpA = 0.5 //0.39
+    val kiA = 0.0
+    val kdA = 0.07 //0.6
 
     //Rotational STRAFE coefficients
     val kprs = 0.6
 
     //Straight Line Coefficients
-    val kpstr = 0.055 //.0625 //0.055 //0.02 //0.1
-    val kistr = 0.0 //0.002 //0.0
-    val kdstr = 5.6 //5.0 //4.0 //0.2
+    val kpstr = 0.0425     //0.03
+    val kistr = 0.0      //0.0
+    val kdstr = 0.0125      //9.25
+
+    //Strafe PID coeffients
+    val kpstf = 0.09      //0.09
+    val kistf = 0.002
+    val kdstf = 0.02      //10.0
+
+    //feedrforward
+    val kv = 0.02
+    val ka = 0.005
+    val kstatic = 0.0
 
     var preverror = 0.0
     var preverrorstr = 0.0
-    var error = 0.0
-    var drifterror = 0.0
+    var preverrorstf = 0.0
     var integralEstraight = 0.0
     var integralEdrift = 0.0
-    var targetangle = 0.0
+    var integralEstrafe = 0.0
+    var rotintegralError = 0.0
+    var rotprevheading = 0.0
+    var vectorAngle = 0.0
+
+    var pidstr : PIDFController
+    var pidstf : PIDFController
+    var pidr : PIDFController
     var telemetry = telemetry
+
+    var position = Pose2d(0.0, 0.0, 0.0)
 
     var p = Pose2d(0.0, 0.0, 0.0)
     var prevpos = DoubleArray(4)
     var robotHeading = 0.0
+
+    var currentPos = Pose2d(0.0, 0.0, 0.0)
 
     enum class aastate{
         STATE_IDOL,
@@ -141,16 +166,18 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var data : RevBulkData
     var data2 : RevBulkData
 
-
+    var odos : ThreeWheelTrackingLocalizer
     init{
         motors.add(Caching_Motor(hardwareMap, "up_left"))
         motors.add(Caching_Motor(hardwareMap, "back_left"))
         motors.add(Caching_Motor(hardwareMap, "back_right"))
         motors.add(Caching_Motor(hardwareMap, "up_right"))
-
+        odos = ThreeWheelTrackingLocalizer(hardwareMap)
         //pid = PID(hardwareMap, telemetry)
 
-
+        pidstr = PIDFController(PIDCoefficients(kpstr, kistr, kdstr), kv, ka, kstatic)
+        pidstf = PIDFController(PIDCoefficients(kpstf, kistf, kdstf), kv, ka, kstatic)
+        pidr = PIDFController(PIDCoefficients(kpA, kiA, kdA))
 
         hub = hardwareMap.get(ExpansionHubEx::class.java, "Expansion Hub 2")
         hub2 = hardwareMap.get(ExpansionHubEx::class.java, "Expansion Hub 1")
@@ -276,15 +303,33 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         return value && !previous
     }
 
-    var stored_pos = Pose2d(0.0,0.0,0.0)
-
     fun drive(gamepad : Gamepad, gamepad2: Gamepad){
+        val data = hub2.bulkInputData
         slowmode2 = gamepad.right_trigger > 0.0
+        odos.update()
+        odos.dataUpdate(data)
+        currentPos = odos.poseEstimate
 
         if(isPress2(gamepad2.x, previous2)){
-            slow_mode = !slow_mode
+            slow_mode = true
         }else if(isPress2(gamepad.a, previous5)){
             slow_mode3 = !slow_mode3
+        }
+
+        if (isPress2(gamepad2.b, previous6)){
+            slow_mode = false
+        }
+
+        if (isPress2(gamepad.left_bumper, previous3)){
+            automateLock = !automateLock
+        }
+
+        if (!isInBounds(gamepad)){
+            automateLock = false
+        }
+
+        if (isPress2(gamepad.y, previous4)){
+            odos.setPos(Pose2d(0.0,0.0,0.0))
         }
         /*
         if (isPress2(gamepad2.dpad_left, previous4) && !Flipper.capped){
@@ -314,14 +359,15 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
          */
 
         previous2 = gamepad2.x
-        previous3 = gamepad2.b
-        previous4 = gamepad2.dpad_left
+        previous3 = gamepad.left_bumper
+        previous4 = gamepad.y
         previous5 = gamepad.a
+        previous6 = gamepad2.b
 
         if (slow_mode || slowmode2){
-            fine_tune = 0.5
-        }else if(slow_mode3){
             fine_tune = 0.3
+        }else if(slow_mode3){
+            fine_tune = 0.45
         } else{
             fine_tune = 0.9
         }
@@ -330,10 +376,40 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             setPower(fine_tune * scalePower(gamepad.left_stick_y.toDouble()), fine_tune * scalePower(gamepad.left_stick_x.toDouble()), -0.5 * gamepad.right_stick_x.toDouble())
         }
         else{
+            goToDeposit(0.6, 0.6, 0.6)
             //capstoneStrafe()
             //targetTurn(Vector2d(fine_tune * gamepad.left_stick_y.toDouble(), fine_tune * gamepad.left_stick_x), Math.PI / 2)
         }
         write()
+    }
+
+    fun isInBounds(gamepad : Gamepad) : Boolean{
+        return gamepad.left_stick_x < 0.3 && gamepad.left_stick_y < 0.3 && gamepad.right_stick_x < 0.3 && gamepad.right_stick_y < 0.3
+    }
+
+    fun goToDeposit(strspeed : Double, stfspeed : Double, rspeed : Double){
+        pidstr.setOutputBounds(-strspeed, strspeed)
+        pidstf.setOutputBounds(-stfspeed, stfspeed)
+        pidr.setOutputBounds(-rspeed, rspeed)
+
+        var heading : Double
+
+        if(currentPos.heading <= Math.PI){
+            heading = currentPos.heading
+        }else{
+            heading = -((2 * Math.PI ) - currentPos.heading)
+        }
+        telemetry.addData("heading: ", heading)
+
+        pidr.targetPosition = 0.0
+        pidstr.targetPosition = 0.0
+        pidstf.targetPosition = 0.0
+
+        //val state = strprofile[time]
+        val powerstr = pidstr.update(currentPos.x/*, state.v, state.a*/)
+        telemetry.addData("current pos: ", currentPos.toString())
+
+        centricSetPower(-powerstr, pidstf.update(-currentPos.y), pidr.update(heading), heading)
     }
 
 

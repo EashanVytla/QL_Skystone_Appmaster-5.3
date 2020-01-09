@@ -6,15 +6,16 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Odometry.Dead_Wheel;
 import org.firstinspires.ftc.teamcode.Odometry.MA3_Encoder;
+import org.firstinspires.ftc.teamcode.Odometry.SRX_Encoder;
 import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.RevBulkData;
 import org.openftc.revextensions2.RevExtensions2;
 
 @Autonomous(name = "Blue Foundation", group = "Competition")
 public class QL_Auto_Blue_Foundation_Fast extends OpMode {
-    Dead_Wheel leftWheel;
-    Dead_Wheel rightWheel;
-    Dead_Wheel strafeWheel;
+    SRX_Encoder leftWheel;
+    SRX_Encoder rightWheel;
+    SRX_Encoder strafeWheel;
 
     Mecanum_Drive drive;
     Intake intake;
@@ -61,22 +62,16 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
         hub = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 2");
         hub2 = hardwareMap.get(ExpansionHubEx.class, "Expansion Hub 1");
 
-        leftWheel = new Dead_Wheel(new MA3_Encoder("a3", hardwareMap, 0.495));
-        rightWheel = new Dead_Wheel(new MA3_Encoder("a4", hardwareMap, 1.365));
-        strafeWheel = new Dead_Wheel(new MA3_Encoder("a1", hardwareMap, 2.464));
+        leftWheel = new SRX_Encoder("intake_left", hardwareMap);
+        rightWheel = new SRX_Encoder("intake_right", hardwareMap);
+        strafeWheel = new SRX_Encoder("lift_2", hardwareMap);
         drive = new Mecanum_Drive(hardwareMap, telemetry);
         flip = new Flipper(hardwareMap, telemetry);
         intake = new Intake(hardwareMap);
 
-        rightWheel.getEncoder().reverse();
+        rightWheel.reverse();
         RevBulkData data = hub.getBulkInputData();
         RevBulkData data2 = hub2.getBulkInputData();
-        leftWheel.getEncoder().calibrate(data);
-        rightWheel.getEncoder().calibrate(data2);
-        strafeWheel.getEncoder().calibrate(data);
-        leftWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237); //1.5144 0.0361262
-        rightWheel.setBehavior(1.5385 * 2 * 0.797, -0.319237); //1.5204 -0.00305571
-        strafeWheel.setBehavior(1.53642 * 2 * 0.797, 0.0); //1.50608 -0.221642
 
         flip.initialize();
     }
@@ -284,11 +279,11 @@ public class QL_Auto_Blue_Foundation_Fast extends OpMode {
     }
 
     private double getForwardDist(){
-        return leftWheel.getDistance() * (23 / 37.678);
+        return leftWheel.getDistance();
     }
 
     private double getStrafeDist(){
-        return strafeWheel.getDistance() * 7.0 / 17.536;
+        return strafeWheel.getDistance();
     }
 
     private double getAngle(){return drive.angleWrap(drive.getExternalHeading());}

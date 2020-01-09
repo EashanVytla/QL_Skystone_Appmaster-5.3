@@ -115,17 +115,18 @@ public class Teleop extends OpMode{
 
     public void loop(){
         RevBulkData data = hub2.getBulkInputData();
-        intake.close();
-        intake.write();
+
         if (data != null){
             elevator.read(data);
+            odos.dataUpdate(data);
         }
-
-        Pose2d currentPos = odos.getPoseEstimate();
         odos.update();
+        Pose2d currentPos = odos.getPoseEstimate();
+
 
         if (gamepad1 != null && gamepad2 != null) {
             //todo: Tune these:
+            elevator.operate(gamepad2);
             if(odos.getPoseEstimate().getY() >= ZONE1_LEFTBOUNDS && odos.getPoseEstimate().getY() <= ZONE1_RIGHTBOUNDS && odos.getPoseEstimate().getX() > ZONE1_UPPERBOUNDS){
                 zone = 1;
             }else if(odos.getPoseEstimate().getY() >= ZONE0_LEFTBOUNDS && odos.getPoseEstimate().getY() <= ZONE0_RIGHTBOUNDS && odos.getPoseEstimate().getX() > ZONE0_UPPERBOUNDS){
@@ -143,27 +144,8 @@ public class Teleop extends OpMode{
 
             telemetry.addData("Zone: ", zone);
 
-            if(automationSt == State.IDLE){
-                drive.drive(gamepad1, gamepad2);
-                if(isPress2(gamepad1.y, previous6)){
-                    stored_pos = new Pose2d(currentPos.getY(), currentPos.getX(), heading);
-                }else if(isPress2(gamepad1.left_bumper, previous7)){
-                    pos = new Pose2d(stored_pos.getX(), stored_pos.getY(), stored_pos.getHeading());
-                    //pos = new Pose2d(0.0, 20.0, 0.0);
-                    automationSt = State.AUTOALLIGN;
-                }else if(isPress2(gamepad1.dpad_left, previous8)){
-                    pos = new Pose2d(stored_pos.getX() + 8, stored_pos.getY(), stored_pos.getHeading());
-                    automationSt = State.CAPSTONE;
-                }else{
-                    automationSt = State.IDLE;
-                }
-            }else if(automationSt == State.AUTOALLIGN){
-                if(gamepad1.left_stick_y >= 0.7){
-                    automationSt = State.IDLE;
-                }else{
-                    localizer.GoToTOP(pos, 0.5, 0.5, 0.5);
-                }
-            }
+            drive.setCurrentPos(new Pose2d(currentPos.getX(), currentPos.getY(), heading));
+            drive.drive(gamepad1, gamepad2);
             drive.write();
         }
         else{
@@ -171,22 +153,21 @@ public class Teleop extends OpMode{
             drive.write();
         }
 
-        telemetry.addData("current pos: ", currentPos.toString());
-        telemetry.addData("Stored Position: ", stored_pos.toString());
+        telemetry.addData("current pos: ", drive.getCurrentPos().toString());
+        telemetry.addData("Position: ", drive.getOdos().getPoseEstimate());
+        telemetry.addData("Stored Position: ", drive.getPosition().toString());
         telemetry.addData("pos: ", pos.toString());
         telemetry.addData("State: ", automationSt);
         previous6 = gamepad1.y;
         previous7 = gamepad1.left_bumper;
         previous8 = gamepad1.dpad_left;
 
-        elevator.operate(gamepad2);
         intake.operate(gamepad1, gamepad2);
         //grabber.operate(gamepad2);
         flipper.operate(gamepad1, gamepad2);
         tape.operate(gamepad2);
         //telemetry.addData("DRIVETRAIN MODE", (mode ? "Field Centric" : "Robot Centric"));
         telemetry.addData("DRIVETRAIN MODE", (drive.getMode() ? "Slow Mode" : "Regular Speed"));
-        telemetry.addData("Stored Pos: ", drive.getStored_pos().toString());
         //telemetry.addData("1mAngle: ", drive.getExternalHeading());
 
         Vector2 v = new Vector2(gamepad1.left_stick_x, gamepad1.left_stick_y);
@@ -194,7 +175,7 @@ public class Teleop extends OpMode{
 
         //telemetry.addData("Slide Error: ", elevator.getError());
 
-        telemetry.addData("Case: ", flipper.getRcase());
+        telemetry.addData("Case: ", flipper.getRCase());
 
         //telemetry.addData("Boundry Condition", elevator.getBoundaryConditions());
 

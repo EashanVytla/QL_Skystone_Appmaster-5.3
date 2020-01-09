@@ -7,6 +7,7 @@ import org.openftc.revextensions2.RevBulkData
 class SRX_Encoder(name : String, hardwareMap: HardwareMap){
     var encoder : DcMotor
     var distance = 0.0
+    var reverse = false
 
     init {
         encoder = hardwareMap.get(DcMotor::class.java, name)
@@ -18,11 +19,18 @@ class SRX_Encoder(name : String, hardwareMap: HardwareMap){
         encoder.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
     }
 
+    fun reverse(){
+        reverse = true
+    }
+
     fun update(data : RevBulkData){
         distance = encoder.currentPosition.toDouble() / (4096/(2.552 * Math.PI))
     }
 
     fun getDist() : Double{
+        if(reverse == true){
+            distance = -distance
+        }
         return distance
     }
 }
