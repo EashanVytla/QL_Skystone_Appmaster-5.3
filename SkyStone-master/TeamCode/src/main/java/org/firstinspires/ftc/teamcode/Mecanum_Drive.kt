@@ -136,6 +136,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var robotHeading = 0.0
 
     var currentPos = Pose2d(0.0, 0.0, 0.0)
+    var fine_tune_rot = 0.0
 
     enum class aastate{
         STATE_IDOL,
@@ -308,7 +309,13 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         slowmode2 = gamepad.right_trigger > 0.0
         odos.update()
         odos.dataUpdate(data)
-        currentPos = odos.poseEstimate
+        var heading = 0.0
+        if(currentPos.heading <= Math.PI){
+            heading = odos.poseEstimate.heading
+        }else{
+            heading = -((2 * Math.PI ) - odos.poseEstimate.heading)
+        }
+        currentPos = Pose2d(odos.poseEstimate.x, odos.poseEstimate.y, heading)
 
         if(isPress2(gamepad2.x, previous2)){
             slow_mode = true
@@ -365,15 +372,18 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         previous6 = gamepad2.b
 
         if (slow_mode || slowmode2){
-            fine_tune = 0.3
+            fine_tune = 0.4
+            fine_tune_rot = 0.4
         }else if(slow_mode3){
             fine_tune = 0.45
+            fine_tune_rot = 0.4
         } else{
             fine_tune = 0.9
+            fine_tune_rot = 0.5
         }
 
         if (!automateLock) {
-            setPower(fine_tune * scalePower(gamepad.left_stick_y.toDouble()), fine_tune * scalePower(gamepad.left_stick_x.toDouble()), -0.5 * gamepad.right_stick_x.toDouble())
+            setPower(fine_tune * scalePower(gamepad.left_stick_y.toDouble()), fine_tune * scalePower(gamepad.left_stick_x.toDouble()), -fine_tune_rot * gamepad.right_stick_x.toDouble())
         }
         else{
             goToDeposit(0.6, 0.6, 0.6)

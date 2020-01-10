@@ -52,9 +52,8 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         const val DepositPos = 1.0
         const val Deposit_Clearance_DROPPING_Block = 0.85
         const val Deposit_Clearance_HANDSHAKE = .15
-
-        const val Flipper_Midway_REALLIGN = 0.75 //THIS IS GOING BACKWARDS 1 -> 0
     }
+    var Flipper_Midway_REALLIGN = 0.0 //THIS IS GOING BACKWARDS 1 -> 0
 
     fun clamp(){
         clamp.setPosition(1.0)
@@ -290,11 +289,13 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
                 }
                 if(getCase() == 2){
                     //Case Right
+                    Flipper_Midway_REALLIGN = 0.7
                     turnPos = case_right_turn_value
                     newState(flip_state.STATE_REALLIGN)
                 }
                 if(getCase() == 1){
                     //Case Left
+                    Flipper_Midway_REALLIGN = 0.75
                     turnPos = case_left_turn_value
                     newState(flip_state.STATE_REALLIGN)
                 }

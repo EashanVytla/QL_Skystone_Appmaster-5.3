@@ -30,7 +30,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
 
     var stack_count = 1
 
-    var TargetPos = arrayOf(0, 570, 999, 1500, 1942, 2367, 2689, 3071, 3513, 3887, 4245)//arrayOf(10, 50, 113, 205, 285, 365, 445, 520, 605, 760, 841, 918)
+    var TargetPos = arrayOf(0, 570, 999, 1500, 1942, 2367, 2689, 3106, 3568, 3922, 4270)//arrayOf(10, 50, 113, 205, 285, 365, 445, 520, 605, 760, 841, 918)
 
     var fine_tune = 1.0
     var error = 0.0
