@@ -572,6 +572,7 @@ public class RED_QL_Skystone_Auto_Intake extends OpMode {
                     if(mStateTime.time() >= 0.5){
                         localizer.getDrive().setPower(0.0,0.0,0.0);
                         localizer.getDrive().write();
+                        telemetry.addData("Tee Hee :)", "Deal with it this is my senior year");
                     }else{
                         localizer.GoTo(new Pose2d(-20, -40, 0.0), 0.6, 0.5, 0.6);
                     }

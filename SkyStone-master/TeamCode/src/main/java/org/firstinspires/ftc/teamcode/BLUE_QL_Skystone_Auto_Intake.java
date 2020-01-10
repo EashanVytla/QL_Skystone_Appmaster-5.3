@@ -185,7 +185,7 @@ public class BLUE_QL_Skystone_Auto_Intake extends OpMode {
         }else if(SkystonePos == 2){
             cross_target = new Pose2d(-21, -100, -Math.PI/2);
             drive_to_block_target = new Pose2d(-24.992, -6, Math.PI/4);
-            return_target = new Pose2d(-24, -26.0, Math.PI/4 + Math.toRadians(10.0));
+            return_target = new Pose2d(-24, -28.0, Math.PI/4 + Math.toRadians(10.0));
             exit_pool = new Pose2d(-22, -10.5, 0.0);
             //drive_to_block_target2 = new Pose2d(-25, -2.0, Math.PI/4);
             intake1 = new Pose2d(-37.337, 2, Math.PI/4);
@@ -588,6 +588,7 @@ public class BLUE_QL_Skystone_Auto_Intake extends OpMode {
                     if(mStateTime.time() >= 0.5){
                         localizer.getDrive().setPower(0.0,0.0,0.0);
                         localizer.getDrive().write();
+                        telemetry.addData("Tee Hee :)", "Deal with it this is my senior year");
                     }else{
                         localizer.GoTo(new Pose2d(-20, -40, 0.0), 0.6, 0.5, 0.6);
                     }
