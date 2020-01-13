@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import Universal.Math.Pose;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ public class Path {
         }
     }
 
-    public double getPositionOnPath(Pose current){
+    public double getPositionOnPath(Pose2d current){
         double min = Double.MAX_VALUE;
         Line l = segments.get(0);
         double distance = 0;
@@ -35,7 +35,7 @@ public class Path {
         return distance;
     }
 
-    public Pose getLookaheadPoint(Pose current, double r){
+    public Pose2d getLookaheadPoint(Pose2d current, double r){
         Line l = segments.get(0);
         double min = Double.MAX_VALUE;
         int index = 0;
@@ -49,17 +49,17 @@ public class Path {
             c++; //I've waited 4 freaking years for this moment
         }
 
-        Pose center = l.closestPointTo(current);
-        ArrayList<Pose> lookahead_points = new ArrayList<>();
+        Pose2d center = l.closestPointTo(current);
+        ArrayList<Pose2d> lookahead_points = new ArrayList<>();
         for (int i = index; i < segments.size(); i++){ //start at the current line segment to avoid going backwards
-            List<Pose> potential = segments.get(i).getLookaheadPoints(center, r);
-            for (Pose p : potential){
+            List<Pose2d> potential = segments.get(i).getLookaheadPoints(center, r);
+            for (Pose2d p : potential){
                 lookahead_points.add(p);
             }
         }
 
         double max_dist = Double.MIN_VALUE;
-        Pose target = center;
+        Pose2d target = new Pose2d(center.vec(), center.heading);
         for (int j = 0; j < lookahead_points.size(); j++){
             if (lookahead_points.get(j).distanceTo(current) > max_dist){
                 if (getPositionOnPath(current) > getPositionOnPath(lookahead_points.get(j))) {
