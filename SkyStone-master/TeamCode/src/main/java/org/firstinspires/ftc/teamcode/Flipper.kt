@@ -122,7 +122,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         deposit.setPosition(0.0)
         turn.setPosition(turnPos_IDOL)
         leftpm.setPosition(0.3)
-        rightpm.setPosition(0.65)
+        rightpm.setPosition(0.75)
         capClamp.setPosition(1.0)
         capDeposit.setPosition(0.0)
         write()
@@ -207,7 +207,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
 
     fun resetPlatform(){
         leftpm.setPosition(0.2)
-        rightpm.setPosition(0.65)
+        rightpm.setPosition(0.75)
         grabbed = false
         knocker = false
         write()
@@ -317,7 +317,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
             if(time.time() >= 0.3){ //Wait for setup procedure before flipping
                 turn.setPosition(turnPos)
                 flipper.setPosition(handshake_flip_position)
-                if(time.time() >= 0.8){
+                if(time.time() >= 1.0){
                     newState(flip_state.STATE_CLAMP)
                 }
             }
@@ -352,7 +352,9 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
             }
             if(time.time() >= 1.8){
                 turn.setPosition(turnPos)
-                flipper.setPosition(handshake_flip_position)
+                if(time.time() >= 1.9){
+                    flipper.setPosition(handshake_flip_position)
+                }
             }
             if(time.time() >= 2.5){
                 clamp()
@@ -410,14 +412,11 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         prev_sequence = sequence
 
         if (betterFlipState == flip_state.STATE_FLIP){
-            t.addData("Unclamping: ", clamp.getPosition())
             unclamp()
-            if(time.time() >= 0.4){ //Wait for setup procedure before flipping
-                t.addData("Flipping: ", flipper.getPosition())
+            if(time.time() >= 0.3){ //Wait for setup procedure before flipping
                 turn.setPosition(turnPos)
                 flipper.setPosition(handshake_flip_position)
-                if(time.time() >= 1.3){
-                    t.addData("Moving On", flipper.getPosition())
+                if(time.time() >= 1.0){
                     newState(flip_state.STATE_CLAMP)
                 }
             }

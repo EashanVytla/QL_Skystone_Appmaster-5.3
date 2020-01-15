@@ -342,14 +342,15 @@ public class BLUE_QL_Skystone_Auto_Intake extends OpMode {
                     mStateTime.reset();
                 }
                  */
-                if(mStateTime.time() >= 0.3) {
-                    drive.setPower(0.0,0.0,0.0);
+                if(mStateTime.time() >= 0.5) {
+                    localizer.getDrive().setPower(0.0,0.0,0.0);
+                    localizer.getDrive().write();
                     newState(State.STATE_GRAB_FOUNDATION);
                 }else{
                     intake.open();
                     flip.flipDown();
                     flip.clamp();
-                    localizer.GoTo(new Pose2d(-41, -90, -Math.PI/2), 0.3, 0.3, 0.3);
+                    localizer.GoTo(new Pose2d(-30, -90, -Math.PI/2), 0.2, 0.2, 0.2);
                 }
                 break;
             case STATE_GRAB_FOUNDATION:
@@ -579,6 +580,8 @@ public class BLUE_QL_Skystone_Auto_Intake extends OpMode {
                         flip.operate(1);
                     }
                 }else{
+                    localizer.getDrive().setPower(0.0,0.0,0.0);
+                    localizer.getDrive().write();
                     //slides.PIDController(1);
                     flip.operate(0);
                 }

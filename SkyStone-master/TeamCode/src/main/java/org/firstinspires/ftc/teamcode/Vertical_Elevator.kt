@@ -21,7 +21,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
     var telemetry = t
     var isDropped = false
     var touch = map.get(DigitalChannel::class.java, "touch")
-    val DROPDOWNPOS = 270
+    val DROPDOWNPOS = 260
 
     var zero = 0.0
 

@@ -160,7 +160,7 @@ public class RED_QL_Skystone_Auto_Intake extends OpMode {
             cross_target = new Pose2d(-21, -100, -Math.PI/2);
             //drive_to_block_target = new Pose2d(-24, 12.0, Math.toRadians(55.983)); //Math.PI/4 + Math.toRadians(10)
             drive_to_block_target = new Pose2d(-25.992, 16.104, Math.toRadians(50));
-            return_target = new Pose2d(-28, -18.0, Math.toRadians(36.0));
+            return_target = new Pose2d(-30, -16.0, Math.toRadians(36.0));
             exit_pool = new Pose2d(-24, -10.5, 0.0);
             //drive_to_block_target2 = new Pose2d(-21, -2.0, Math.PI/4);
             //intake1 = new Pose2d(-44, 15.104, Math.toRadians(55.983));
@@ -170,21 +170,21 @@ public class RED_QL_Skystone_Auto_Intake extends OpMode {
             //return_target2 = new Pose2d(-25, -13.0, Math.PI/4 + Math.toRadians(10.0));
         }else if(SkystonePos == 1){
             cross_target = new Pose2d(-21, -100, -Math.PI/2);
-            drive_to_block_target = new Pose2d(-24.992, 0.0, Math.PI/4);
-            return_target = new Pose2d(-28, -22.0, Math.PI/4 + Math.toRadians(10.0));
-            exit_pool = new Pose2d(-22, -10.5, 0.0);
+            drive_to_block_target = new Pose2d(-24.992, -2.0, Math.PI/4);
+            return_target = new Pose2d(-31, -22.0, Math.PI/4 + Math.toRadians(10.0));
+            exit_pool = new Pose2d(-24, -10.5, 0.0);
             //drive_to_block_target2 = new Pose2d(-25, -2.0, Math.PI/4);
-            intake1 = new Pose2d(-37.337, 10, Math.PI/4);
+            intake1 = new Pose2d(-37.337, 8, Math.PI/4);
             intake2 = new Pose2d(-45, -14, Math.PI/4);
             //return_target2 = new Pose2d(-25, -13.0, Math.PI/4 + Math.toRadians(10.0));
         }else if(SkystonePos == 2){
             cross_target = new Pose2d(-21, -100, -Math.PI/2);
             drive_to_block_target = new Pose2d(-26.992, -12, Math.PI/4);
-            return_target = new Pose2d(-24, -34.0, Math.PI/4 + Math.toRadians(10.0));
-            exit_pool = new Pose2d(-22, -10.5, 0.0);
+            return_target = new Pose2d(-24, -36.0, Math.PI/4 + Math.toRadians(10.0));
+            exit_pool = new Pose2d(-24, -10.5, 0.0);
             //drive_to_block_target2 = new Pose2d(-25, -2.0, Math.PI/4);
             intake1 = new Pose2d(-37.337, 1, Math.PI/4);
-            intake2 = new Pose2d(-38, -6, Math.PI/4);
+            intake2 = new Pose2d(-40, -6, Math.PI/4);
             //return_target2 = new Pose2d(-25, -13.0, Math.PI/4 + Math.toRadians(10.0));
         }
 
@@ -338,14 +338,15 @@ public class RED_QL_Skystone_Auto_Intake extends OpMode {
                     mStateTime.reset();
                 }
                  */
-                if(mStateTime.time() >= 0.3) {
-                    drive.setPower(0.0,0.0,0.0);
+                if(mStateTime.time() >= 0.5) {
+                    localizer.getDrive().setPower(0.0,0.0,0.0);
+                    localizer.getDrive().write();
                     newState(State.STATE_GRAB_FOUNDATION);
                 }else{
                     intake.open();
                     flip.flipDown();
                     flip.clamp();
-                    localizer.GoTo(new Pose2d(-41, -90, -Math.PI/2), 0.3, 0.3, 0.3);
+                    localizer.GoTo(new Pose2d(-39, -90, -Math.PI/2), 0.3, 0.3, 0.3);
                 }
                 break;
             case STATE_GRAB_FOUNDATION:
@@ -383,7 +384,7 @@ public class RED_QL_Skystone_Auto_Intake extends OpMode {
                 }else{
                     //localizer.targetTurnPlatform(0.0, currentPos.getHeading());
                     //drive.setPower(-0.5, 0.0, 1.0);
-                    localizer.GoTo(new Pose2d(-6, -62, Math.PI / 4), 1.0, 1.0, 1.0);
+                    localizer.GoTo(new Pose2d(-15, -62, Math.PI / 4), 1.0, 1.0, 1.0);
                     flip.operate(2);
                     intake.setPower(-.3);
                     intake.close();
@@ -544,7 +545,7 @@ public class RED_QL_Skystone_Auto_Intake extends OpMode {
                     newState(State.STATE_DEPOSIT2);
                 }else{
                     intake.setPower(0.15);
-                    saved_deposit = new Pose2d(-20, -90, 0.0);
+                    saved_deposit = new Pose2d(-23, -90, 0.0);
                     flip.clamp();
                     flip.flipDown();
                     if(currentPos.getY() >= 56){
