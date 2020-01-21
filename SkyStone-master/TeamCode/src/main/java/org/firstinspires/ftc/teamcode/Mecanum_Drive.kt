@@ -273,6 +273,40 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         }
     }
 
+    fun followPath(pathPoints : ArrayList<CurvePoint>, followAngle : Double, p : Pose2d, power : Double, holdAngle : Double = 0.0){
+        var lookahead = when (holdAngle != 0.0) {
+            true -> RobotMovement.followPath(pathPoints, followAngle, p)
+            false -> RobotMovement.followPath(pathPoints, followAngle, holdAngle, p)
+        }
+
+        goToPoint(p, lookahead, power, power, power)
+    }
+
+    fun goToPoint(p : Pose2d, target : Pose2d, strspeed: Double, stfspeed : Double, rspeed : Double){
+        pidstr.setOutputBounds(-strspeed, strspeed)
+        pidstf.setOutputBounds(-stfspeed, stfspeed)
+        pidr.setOutputBounds(-rspeed, rspeed)
+
+        var heading : Double
+
+        if(currentPos.heading <= Math.PI){
+            heading = currentPos.heading
+        }else{
+            heading = -((2 * Math.PI ) - currentPos.heading)
+        }
+        telemetry.addData("heading: ", heading)
+
+        pidr.targetPosition = target.heading
+        pidstr.targetPosition = target.x
+        pidstf.targetPosition = target.y
+
+        //val state = strprofile[time]
+        val powerstr = pidstr.update(currentPos.x/*, state.v, state.a*/)
+        telemetry.addData("current pos: ", currentPos.toString())
+
+        centricSetPower(-powerstr, pidstf.update(-currentPos.y), pidr.update(heading), heading)
+    }
+
     fun scalePower(speed: Double) : Double{
         //return 0.5 * Math.pow(2 * (speed - 0.5), 3.0) + 0.5
         /*
