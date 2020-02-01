@@ -49,8 +49,8 @@ class Intake(hardwareMap: HardwareMap) {
     fun setPower(power : Double){
         motors[0].motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         motors[1].motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        motors[0].setPower(power)
-        motors[1].setPower(-power)
+        motors[0].setPower(-power)
+        motors[1].setPower(power)
     }
 
     fun setPosition(position : Double){
@@ -98,7 +98,7 @@ class Intake(hardwareMap: HardwareMap) {
 
         if(clampst == clamp.OPEN){
             val wait_time = when{
-                Flipper.rcase != 0 -> 4.0
+                Flipper.rcase != 0 -> 3.0
                 else -> 2.0
             }
             if (time.time() <= wait_time) {

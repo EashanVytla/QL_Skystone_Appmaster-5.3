@@ -40,28 +40,28 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
     var currentPos = Pose2d(0.0, 0.0, 0.0)
     var odos : ThreeWheelTrackingLocalizer
 
+    //Turn Coefficients
+    val kpA = 0.82 //0.39
+    val kiA = 0.0
+    val kdA = 0.07 //0.6
+
+    //Straight Line Coefficients
+    val kpstr = 0.05     //0.03
+    val kistr = 0.0      //0.0
+    val kdstr = 0.0125      //9.25
+
+    //Strafe PID coeffients
+    val kpstf = 0.13      //0.09
+    val kistf = 0.002
+    val kdstf = 0.02      //10.0
+
     //Rotational straight line coefficients
     val kpr = 0.6
     val kir = 0.0
     val kdr = 0.0
 
-    //Turn Coefficients
-    val kpA = 0.5 //0.39
-    val kiA = 0.0
-    val kdA = 0.07 //0.6
-
     //Rotational STRAFE coefficients
     val kprs = 0.6
-
-    //Straight Line Coefficients
-    val kpstr = 0.0425     //0.03
-    val kistr = 0.0      //0.0
-    val kdstr = 0.0125      //9.25
-
-    //Strafe PID coeffients
-    val kpstf = 0.09      //0.09
-    val kistf = 0.002
-    val kdstf = 0.02      //10.0
 
     //feedrforward
     val kv = 0.02

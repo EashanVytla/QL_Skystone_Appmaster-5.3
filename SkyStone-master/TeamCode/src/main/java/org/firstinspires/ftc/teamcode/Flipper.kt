@@ -23,6 +23,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
     var sensorDistance: DistanceSensor
     var dist = 0.0
     var knocker = false
+    var telemetry = telemetry
 
     var previous = false
     var previouscap = false
@@ -53,6 +54,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         const val Deposit_Clearance_DROPPING_Block = 0.85
         const val Deposit_Clearance_HANDSHAKE = .15
     }
+
     var Flipper_Midway_REALLIGN = 0.0 //THIS IS GOING BACKWARDS 1 -> 0
 
     fun clamp(){
@@ -69,7 +71,8 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         STATE_DEPOSIT,
         STATE_REALLIGN,
         STATE_DROP,
-        STATE_IDLE
+        STATE_IDLE,
+        STATE_CLEAR
     }
 
     var betterFlipState = flip_state.STATE_IDLE
@@ -223,11 +226,11 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         write()
     }
 
+    fun clampClearStack(){
+        clamp.setPosition(0.4)
+    }
 
     fun operate(g1: Gamepad, g2 : Gamepad){
-            if(g1.right_bumper){
-                newState(flip_state.STATE_DROP)
-            }
             if(g2.b){
                 newState(flip_state.STATE_IDLE)
             }
@@ -271,6 +274,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
             previousclamp = g2.dpad_right
 
             if(isPress(g2.dpad_left, previouscap)){
+                /*
                 if(!capped){
                     capDeposit.setPosition(1.0)
                     capped = true
@@ -278,6 +282,8 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
                     capDeposit.setPosition(0.0)
                     capped = false
                 }
+
+                 */
             }
             previouscap = g2.dpad_left
 
@@ -372,21 +378,27 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
             }
         }
 
+        telemetry.addData("flip State: ", betterFlipState)
+
+        if (capped){
+            capDeposit.setPosition(1.0);
+        }
+
         write()
     }
 
     fun operate(sequence : Int){
-        if(sequence == 0){
+        if(sequence == 0 && prev_sequence != 0){
             newState(flip_state.STATE_DEPOSIT)
         }
         if(sequence == 1 && prev_sequence != 1){
             newState(flip_state.STATE_DROP)
         }
-        if(sequence == 2){
+        if(sequence == 2 && prev_sequence != 2){
             newState(flip_state.STATE_IDLE)
         }
 
-        if(sequence == 3){
+        if(sequence == 3 && prev_sequence != 3){
             if(getCase() == 0) {
                 //Case regular
                 turnPos = case_center_turn_value
@@ -407,6 +419,10 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         if(sequence == 4 && prev_sequence != 4){
             turnPos = case_center_turn_value
             newState(flip_state.STATE_FLIP)
+        }
+
+        if(sequence == 5 && prev_sequence != 5){
+            newState(flip_state.STATE_CLEAR)
         }
 
         prev_sequence = sequence
@@ -469,6 +485,12 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
 
             if(time.time() >= 3.5){
                 newState(flip_state.STATE_IDLE)
+            }
+        }else if(betterFlipState == flip_state.STATE_CLEAR){
+            clampClearStack()
+            if(time.time() >= 0.3){
+                t.addData("Clearing Stone: ", Deposit_Clearance_DROPPING_Block);
+                deposit.setPosition(Deposit_Clearance_DROPPING_Block)
             }
         }
 

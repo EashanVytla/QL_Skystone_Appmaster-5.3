@@ -23,7 +23,7 @@ public class slide_test extends OpMode {
 
     public void loop(){
         elevator.read(hub2.getBulkInputData());
-        elevator.operate(gamepad2);
+        elevator.operate(gamepad2, gamepad1);
 
         telemetry.addData("Motor 1 Pos: ", elevator.getMotors()[0].getCurrentPosition());
         telemetry.addData("Motor 2 Pos: ", elevator.getMotors()[1].getCurrentPosition());

@@ -5,6 +5,7 @@ import com.acmerobotics.roadrunner.localization.ThreeTrackingWheelLocalizer;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.Universal.Math.Pose;
 import org.jetbrains.annotations.NotNull;
 import org.openftc.revextensions2.RevBulkData;
 
@@ -16,12 +17,14 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
     public static double WHEEL_RADIUS = 1.276; // in
     public static double GEAR_RATIO = 1; // output (wheel) speed / input (encoder) speed
 
-    public static double LATERAL_DISTANCE = 15.9235669; // in; distance between the left and right wheels
-    public static double FORWARD_OFFSET = -3.890925; //3.9625//3.92577 //4.08535032; // in; offset of the lateral wheel
+    public static double LATERAL_DISTANCE = 15.113085441402362; // in; distance between the left and right wheels
+    public static double FORWARD_OFFSET = -4.875;// in; offset of the lateral wheel
 
     private DcMotor leftEncoder, rightEncoder, frontEncoder;
 
     private int[] positions = {0, 0, 0};
+    public double heading;
+    public double startheading;
 
     public ThreeWheelTrackingLocalizer(HardwareMap hardwareMap) {
         super(Arrays.asList(
@@ -49,6 +52,35 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
         positions[2] = data.getMotorCurrentPosition(frontEncoder);
     }
 
+    public void reset(){
+        leftEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
+
+    public double getAbsoluteAngle(){
+        heading = angleWrap((encoderTicksToInches(positions[1]) - encoderTicksToInches(positions[0])) / LATERAL_DISTANCE);
+        heading -= startheading;
+        return heading;
+    }
+
+    public void poseSet(Pose2d pos){
+        startheading = pos.getHeading();
+        setPoseEstimate(pos);
+    }
+
+    public double getstrafeDiff(){
+        return encoderTicksToInches(positions[2]) / FORWARD_OFFSET;
+    }
+
+    public Pose2d getEstimatedPose(){
+        return new Pose2d(getPoseEstimate().getX(), getPoseEstimate().getY(), getAbsoluteAngle());
+    }
+
+    private double angleWrap(double theta){
+        return (theta + (2 * Math.PI)) % (2 * Math.PI);
+    }
+
     @Override
     public List<Double> getWheelPositions() {
         return Arrays.asList(
@@ -57,4 +89,6 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
                 encoderTicksToInches(-positions[2])
         );
     }
+
+
 }

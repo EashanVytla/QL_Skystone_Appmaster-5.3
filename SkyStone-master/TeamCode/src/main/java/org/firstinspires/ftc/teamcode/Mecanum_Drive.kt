@@ -1,20 +1,20 @@
 package org.firstinspires.ftc.teamcode
 
+import org.firstinspires.ftc.teamcode.Pure_Pursuit.CurvePoint
 import com.acmerobotics.roadrunner.control.PIDCoefficients
 import com.acmerobotics.roadrunner.control.PIDFController
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.qualcomm.hardware.bosch.BNO055IMU
 import com.qualcomm.hardware.lynx.LynxEmbeddedIMU
-import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorSimple
-import com.qualcomm.robotcore.hardware.Gamepad
-import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.*
 import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.Range
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation
 import org.firstinspires.ftc.teamcode.Odometry.ThreeWheelTrackingLocalizer
+import org.firstinspires.ftc.teamcode.Pure_Pursuit.MathFunctions
+import org.firstinspires.ftc.teamcode.Pure_Pursuit.RobotMovement
 import org.firstinspires.ftc.teamcode.Universal.Math.Pose
 import org.firstinspires.ftc.teamcode.Universal.Math.Vector2
 import org.openftc.revextensions2.ExpansionHubEx
@@ -46,7 +46,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var currHeading = 0.0
     var headingReadCount = 0
     var headingAccessCount = 0
-    val headingUpdateFrequency = 0.1
+    val headingUpdateFrequency = 1.0
 
     var rangle : Double = 0.0
     //var angle: Double = 0.toDouble()
@@ -72,6 +72,10 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var previous5 = false
     var slow_mode = false
     var previous6 = false
+    var previous7 = false
+    var previous8 = false
+    var previous9 = false
+    var previous10 = false
 
     //var pid: PID
 
@@ -82,30 +86,20 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
 
     var headingLock = false
 
-    var automateLock = false
-    var automateLock2 = false
     var flipper : Flipper
 
-    //Rotational straight line coefficients
-    val kpr = 0.6
-    val kir = 0.0
-    val kdr = 0.0
-
     //Turn Coefficients
-    val kpA = 0.5 //0.39
+    val kpA = 0.82 //0.39
     val kiA = 0.0
     val kdA = 0.07 //0.6
 
-    //Rotational STRAFE coefficients
-    val kprs = 0.6
-
     //Straight Line Coefficients
-    val kpstr = 0.0425     //0.03
+    val kpstr = 0.05     //0.03
     val kistr = 0.0      //0.0
     val kdstr = 0.0125      //9.25
 
     //Strafe PID coeffients
-    val kpstf = 0.09      //0.09
+    val kpstf = 0.13      //0.09
     val kistf = 0.002
     val kdstf = 0.02      //10.0
 
@@ -134,8 +128,10 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var p = Pose2d(0.0, 0.0, 0.0)
     var prevpos = DoubleArray(4)
     var robotHeading = 0.0
+    //var Deposit : Servo
 
-    var currentPos = Pose2d(0.0, 0.0, 0.0)
+
+
     var fine_tune_rot = 0.0
 
     enum class aastate{
@@ -162,10 +158,25 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         const val kiA = 0.008//0.005
         const val kdA = 0.2
         const val kp = 1.4
+        var capstone = false
+        var capTime = ElapsedTime()
+        var currentPos = Pose2d(0.0,0.0,0.0)
+
+        var automateLock2 = false
+    }
+    var automateLock = false
+
+    fun setCurrentPos(pos : Pose2d){
+        currentPos = pos
+    }
+
+    fun getCurrentPos() : Pose2d{
+        return currentPos
     }
 
     var data : RevBulkData
     var data2 : RevBulkData
+    var flip : FlipperV2
 
     var odos : ThreeWheelTrackingLocalizer
     init{
@@ -174,6 +185,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         motors.add(Caching_Motor(hardwareMap, "back_right"))
         motors.add(Caching_Motor(hardwareMap, "up_right"))
         odos = ThreeWheelTrackingLocalizer(hardwareMap)
+        flip = FlipperV2(hardwareMap, telemetry)
         //pid = PID(hardwareMap, telemetry)
 
         pidstr = PIDFController(PIDCoefficients(kpstr, kistr, kdstr), kv, ka, kstatic)
@@ -182,6 +194,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
 
         hub = hardwareMap.get(ExpansionHubEx::class.java, "Expansion Hub 2")
         hub2 = hardwareMap.get(ExpansionHubEx::class.java, "Expansion Hub 1")
+        //Deposit = hardwareMap.get(Servo::class.java, "")
 
         data = hub.bulkInputData
         data2 = hub2.bulkInputData
@@ -216,8 +229,11 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         imu.initialize(parameters)
         orientation = imu.angularOrientation
         time.startTime()
+        capTime.startTime()
 
         flipper = Flipper(hardwareMap, telemetry)
+
+        RobotMovement.setTelemetry(telemetry)
     }
 
     fun newState(s : State){
@@ -273,40 +289,6 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         }
     }
 
-    fun followPath(pathPoints : ArrayList<CurvePoint>, followAngle : Double, p : Pose2d, power : Double, holdAngle : Double = 0.0){
-        var lookahead = when (holdAngle != 0.0) {
-            true -> RobotMovement.followPath(pathPoints, followAngle, p)
-            false -> RobotMovement.followPath(pathPoints, followAngle, holdAngle, p)
-        }
-
-        goToPoint(p, lookahead, power, power, power)
-    }
-
-    fun goToPoint(p : Pose2d, target : Pose2d, strspeed: Double, stfspeed : Double, rspeed : Double){
-        pidstr.setOutputBounds(-strspeed, strspeed)
-        pidstf.setOutputBounds(-stfspeed, stfspeed)
-        pidr.setOutputBounds(-rspeed, rspeed)
-
-        var heading : Double
-
-        if(currentPos.heading <= Math.PI){
-            heading = currentPos.heading
-        }else{
-            heading = -((2 * Math.PI ) - currentPos.heading)
-        }
-        telemetry.addData("heading: ", heading)
-
-        pidr.targetPosition = target.heading
-        pidstr.targetPosition = target.x
-        pidstf.targetPosition = target.y
-
-        //val state = strprofile[time]
-        val powerstr = pidstr.update(currentPos.x/*, state.v, state.a*/)
-        telemetry.addData("current pos: ", currentPos.toString())
-
-        centricSetPower(-powerstr, pidstf.update(-currentPos.y), pidr.update(heading), heading)
-    }
-
     fun scalePower(speed: Double) : Double{
         //return 0.5 * Math.pow(2 * (speed - 0.5), 3.0) + 0.5
         /*
@@ -339,17 +321,12 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     }
 
     fun drive(gamepad : Gamepad, gamepad2: Gamepad){
+        capstone = false
         val data = hub2.bulkInputData
         slowmode2 = gamepad.right_trigger > 0.0
         odos.update()
         odos.dataUpdate(data)
         var heading = 0.0
-        if(currentPos.heading <= Math.PI){
-            heading = odos.poseEstimate.heading
-        }else{
-            heading = -((2 * Math.PI ) - odos.poseEstimate.heading)
-        }
-        currentPos = Pose2d(odos.poseEstimate.x, odos.poseEstimate.y, heading)
 
         if(isPress2(gamepad2.x, previous2)){
             slow_mode = true
@@ -357,7 +334,16 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             slow_mode3 = !slow_mode3
         }
 
-        if (isPress2(gamepad2.b, previous6)){
+        if(isPress2(gamepad.b, previous10)){
+            if(flip.getKnocker()){
+                flip.resetPlatform()
+            }else{
+                flip.startKnocker()
+            }
+            flip.setKnocker(!flip.getKnocker())
+        }
+
+        if (isPress2(gamepad2.b, previous6) || isPress2(gamepad.right_bumper, previous9)) {
             slow_mode = false
         }
 
@@ -365,12 +351,12 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             automateLock = !automateLock
         }
 
-        if (!isInBounds(gamepad)){
-            automateLock = false
+        if(isPress2(gamepad2.dpad_left, previous8)){
+            capstone = !capstone
         }
 
-        if (isPress2(gamepad.y, previous4)){
-            odos.setPos(Pose2d(0.0,0.0,0.0))
+        if (!isInBounds(gamepad)){
+            automateLock = false
         }
         /*
         if (isPress2(gamepad2.dpad_left, previous4) && !Flipper.capped){
@@ -404,6 +390,9 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         previous4 = gamepad.y
         previous5 = gamepad.a
         previous6 = gamepad2.b
+        previous7 = gamepad.right_bumper
+        previous8 = gamepad2.dpad_left
+        previous10 = gamepad.b
 
         if (slow_mode || slowmode2){
             fine_tune = 0.4
@@ -412,19 +401,72 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             fine_tune = 0.45
             fine_tune_rot = 0.4
         } else{
-            fine_tune = 0.9
+            fine_tune = 1.0
             fine_tune_rot = 0.5
         }
 
-        if (!automateLock) {
-            setPower(fine_tune * scalePower(gamepad.left_stick_y.toDouble()), fine_tune * scalePower(gamepad.left_stick_x.toDouble()), -fine_tune_rot * gamepad.right_stick_x.toDouble())
+        if(Math.hypot(gamepad.right_stick_x.toDouble(), gamepad.right_stick_y.toDouble()) >= 0.15 || Math.hypot(gamepad.left_stick_x.toDouble(), gamepad.left_stick_y.toDouble()) >= 0.15){
+            automateLock = false
+            automateLock2 = false
         }
-        else{
-            goToDeposit(0.6, 0.6, 0.6)
+
+        if (!automateLock && !automateLock2) {
+            setPower(fine_tune * scalePower(gamepad.left_stick_y.toDouble()), fine_tune * scalePower(gamepad.left_stick_x.toDouble()), -fine_tune_rot * gamepad.right_stick_x.toDouble())
+        }else if(automateLock2){
+            if(capTime.time() >= 1.0){
+                goToDeposit(1.0, 1.0, 1.0)
+            }
+            Flipper.capped = true
+        }else if(automateLock){
+            goToDeposit(1.0, 1.0, 1.0)
             //capstoneStrafe()
             //targetTurn(Vector2d(fine_tune * gamepad.left_stick_y.toDouble(), fine_tune * gamepad.left_stick_x), Math.PI / 2)
         }
+        telemetry.addData("Capstone Readiness: ", capstone)
         write()
+    }
+
+    fun followPath(pathPoints : ArrayList<CurvePoint>, followAngle : Double, p : Pose2d){
+        var lookahead : Pose2d = RobotMovement.followPath(pathPoints, followAngle, p)
+        telemetry.addData("Lookahead Point: ", lookahead)
+        telemetry.addData("Error: ", p.vec().distTo(lookahead.vec()))
+        goToPoint(p, lookahead, pathPoints.get(RobotMovement.getCurrentLine(MathFunctions.poseToPoint(lookahead), pathPoints)).moveSpeed, pathPoints.get(RobotMovement.getCurrentLine(MathFunctions.poseToPoint(lookahead), pathPoints)).moveSpeed, pathPoints.get(RobotMovement.getCurrentLine(MathFunctions.poseToPoint(lookahead), pathPoints)).turnSpeed)
+    }
+
+    fun followPath(pathPoints : ArrayList<CurvePoint>, followAngle : Double, p : Pose2d, power : Double, holdAngle : Double = 0.0){
+        var lookahead = RobotMovement.followPath(pathPoints, followAngle, holdAngle, p)
+        telemetry.addData("Lookahead Point: ", lookahead)
+        goToPoint(p, lookahead, power, power, power)
+    }
+
+    fun goToPoint(p : Pose2d, target : Pose2d, strspeed: Double, stfspeed : Double, rspeed : Double){
+        pidstr.setOutputBounds(-strspeed, strspeed)
+        pidstf.setOutputBounds(-stfspeed, stfspeed)
+        pidr.setOutputBounds(-rspeed, rspeed)
+        var heading = p.heading
+        var target_heading = target.heading
+        var turnPower = 0.0
+
+        if(p.heading <= Math.PI){
+            heading = p.heading
+        }else{
+            heading = -((2 * Math.PI ) - p.heading)
+        }
+
+        if(Math.abs(target.heading - heading) >= Math.toRadians(180.0)){
+            target_heading = -((2 * Math.PI) - target.heading)
+        }
+
+        telemetry.addData("heading: ", heading)
+
+        pidr.targetPosition = target_heading
+        pidstr.targetPosition = target.y
+        pidstf.targetPosition = target.x
+
+        turnPower = pidr.update(heading)
+
+        centricSetPower(-pidstf.update(p.x), -pidstr.update(p.y), turnPower, p.heading)
+        telemetry.addData("Error: ", target - p)
     }
 
     fun isInBounds(gamepad : Gamepad) : Boolean{
@@ -452,6 +494,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         //val state = strprofile[time]
         val powerstr = pidstr.update(currentPos.x/*, state.v, state.a*/)
         telemetry.addData("current pos: ", currentPos.toString())
+        telemetry.addData("Capstone Readiness? ", capstone)
 
         centricSetPower(-powerstr, pidstf.update(-currentPos.y), pidr.update(heading), heading)
     }
@@ -529,7 +572,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             it.read(data)
         }
         headingReadCount++
-        if (headingAccessCount.toDouble() / headingReadCount.toDouble() < headingUpdateFrequency) {
+        if (headingAccessCount.toDouble() / headingReadCount.toDouble() < headingUpdateFrequency || true) {
             headingAccessCount++
             currHeading = imu.angularOrientation.firstAngle.toDouble()
             orientation = imu.angularOrientation
