@@ -96,6 +96,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
 
     fun flipDown(){
         flipper.setPosition(flipperPos_IDOL)
+        turn.setPosition(turnPos_IDOL)
     }
 
     init{
@@ -198,6 +199,11 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
                 newState(flip_state.STATE_CLAMP)
             }
         }
+    }
+
+    fun flipflipper(){
+        flipper.setPosition(handshake_flip_position)
+        turn.setPosition(case_center_turn_value)
     }
 
     fun grabPlatform(){
