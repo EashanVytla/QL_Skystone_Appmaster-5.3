@@ -156,9 +156,12 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         motors.map{
             it.motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         }
-        var new_power = power + gff
-        if (getLiftHeight() > 2299 / 2){
-            new_power += k * (getLiftHeight() - 2299 / 2)
+        var new_power = power
+        if (power >= 0.0){
+            if (getLiftHeight() > 2299 / 2){
+                new_power += k * (getLiftHeight() - 2299 / 2)
+            }
+            new_power += gff
         }
         motors[0].setPower(Range.clip(-new_power, -1.0, 1.0))
         motors[1].setPower(Range.clip(new_power, -1.0, 1.0))
@@ -396,12 +399,24 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
             }
         }
         else if (mSlideState == slideState.STATE_IDLE){
+            /*
             if(g2.right_stick_y < 0){
-                setPower(-0.25 * g2.right_stick_y)
+                setPower(-0.35 * g2.right_stick_y)
+            }else{
+                if (getLiftHeight() >= DROPDOWNPOS) {
+                    setPower(-0.05 * g2.right_stick_y)
+                }
+                else{
+                    setPower(-0.1 * g2.right_stick_y);
+                }
+            }
+
+             */
+            if(g2.right_stick_y < 0){
+                setPower(-0.35 * g2.right_stick_y)
             }else{
                 setPower(-0.25 * g2.right_stick_y)
             }
-
         }
         /*if (mSlideState != slideState.STATE_RAISE) {
             write()

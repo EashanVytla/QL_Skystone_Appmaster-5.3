@@ -70,6 +70,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var previous3 = false
     var previous4 = false
     var previous5 = false
+    var slow_mode4 = false
+    var slow_mode5 = false
     var slow_mode = false
     var previous6 = false
     var previous7 = false
@@ -85,8 +87,6 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     //var headingerror: Double = 0.toDouble()
 
     var headingLock = false
-
-    var flipper : Flipper
 
     //Turn Coefficients
     val kpA = 0.82 //0.39
@@ -231,8 +231,6 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         time.startTime()
         capTime.startTime()
 
-        flipper = Flipper(hardwareMap, telemetry)
-
         RobotMovement.setTelemetry(telemetry)
     }
 
@@ -333,7 +331,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         }else if(isPress2(gamepad.a, previous5)){
             slow_mode3 = !slow_mode3
         }
-
+        /*
         if(isPress2(gamepad.b, previous10)){
             if(flip.getKnocker()){
                 flip.resetPlatform()
@@ -342,6 +340,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             }
             flip.setKnocker(!flip.getKnocker())
         }
+
+         */
 
         if (isPress2(gamepad2.b, previous6) || isPress2(gamepad.right_bumper, previous9)) {
             slow_mode = false
@@ -352,7 +352,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         }
 
         if(isPress2(gamepad2.dpad_left, previous8)){
-            capstone = !capstone
+            //capstone = !capstone
+            slow_mode4 = !slow_mode4
         }
 
         if (!isInBounds(gamepad)){
@@ -394,7 +395,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         previous8 = gamepad2.dpad_left
         previous10 = gamepad.b
 
-        if (slow_mode || slowmode2){
+        if (slow_mode || slowmode2 || slow_mode4){
             fine_tune = 0.4
             fine_tune_rot = 0.4
         }else if(slow_mode3){
