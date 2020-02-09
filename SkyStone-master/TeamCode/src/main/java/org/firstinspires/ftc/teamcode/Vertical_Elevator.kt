@@ -31,13 +31,15 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
 
     var stack_count = 0
 
-    var TargetPos = arrayOf(0, 593/2, 1071/2, 1459/2, 1880/2, 1216, 1405, 1646, 1880, 2095, 2330, 2567)
+    var TargetPos = arrayOf(0, 593/2, 1071/2, 1459/2, 1890/2, 1216, 1405, 1646, 1880, 2095, 2330, 2567)
 
     var fine_tune = 1.0
     var error = 0.0
 
     var lastError = 0.0
 
+    var previous = false;
+    var previous2 = false;
     var lastTime = System.currentTimeMillis()
 
     var holdTime = ElapsedTime()
@@ -48,12 +50,20 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
 
     var gff = 0.25//0.1926
 
+    var increaseQueried = false
+
+
     companion object{
         const val speed = 1.0
         const val kp = 0.005 * speed
         const val kd = 0.001 * speed
         const val FF = 0.000
         const val k = 0.000183908
+        var depositCheck = false
+    }
+
+    fun getDepositCheck() : Boolean{
+        return depositCheck
     }
 
     enum class slideState{
@@ -62,7 +72,8 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         STATE_DROP,
         STATE_IDLE,
         STATE_LEAVE_STACK,
-        STATE_AUTOMATION
+        STATE_AUTOMATION,
+        STATE_CAPSTONE
     }
 
     enum class leaveState{
@@ -123,15 +134,21 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         telemetry.addData("Control Effort", power)
     }
 
-    fun PIDController(Position : Double){
+    fun PIDControllerPos(Position : Double){
         error = Position - getLiftHeight()
 
         var prop_gain = kp * error
         var deriv_gain = kd * ((error - lastError) / (System.currentTimeMillis() - lastTime))
         var ff_gain = 0.0
+        if (Position > TargetPos[8]) {
+            ff_gain = FF * Position
+        }
         lastTime = System.currentTimeMillis()
         var power = prop_gain + deriv_gain + ff_gain
 
+        //if(stack_count >= 6){
+        //power += 0.04 * (stack_count - 5)
+        //}
         if (abs(power) > 0.001) {
             setPower(power)
         }
@@ -156,15 +173,37 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         motors.map{
             it.motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         }
-        var new_power = power
-        if (power >= 0.0){
-            if (getLiftHeight() > 2299 / 2){
-                new_power += k * (getLiftHeight() - 2299 / 2)
-            }
-            new_power += gff
+        //Intantiating the power to the default power
+        var newPower = power
+        //Only applying the gravity feedforward if the current lift height is greater than the elevator's lowest position
+
+        if (getLiftHeight() > 2299 / 2){
+            newPower += k * (getLiftHeight() - 2299 / 2) //Subtracts the halfway point so that the x value in our spring force calculation starts at the half-way point
         }
-        motors[0].setPower(Range.clip(-new_power, -1.0, 1.0))
-        motors[1].setPower(Range.clip(new_power, -1.0, 1.0))
+        //First Checks to see if the power are positive and slides are going up because we don't want spring feedforward to be activated if the slides are going down
+        if (power >= 0.0){
+            //Checks if the lift height is greater than the threshold value of half way of the maximum of the elevator
+            if (getLiftHeight() >= DROPDOWNPOS * 2){
+                newPower += gff
+            }
+        }
+        else{
+            if (getLiftHeight() > 2299 / 2){
+                newPower *= 0.5
+            }
+            if (getLiftHeight() < DROPDOWNPOS){
+                newPower *= 1.5
+            }
+        }
+        /*else{
+            //If the slides are going down just give the driver or pid controller full control over the elevator
+            if (getLiftHeight() < DROPDOWNPOS * 2){
+                newPower /= Math.abs(newPower)
+                newPower = Range.clip(newPower, -0.1, 0.1)
+            }
+        }*/
+        motors[0].setPower(Range.clip(-newPower, -1.0, 1.0))
+        motors[1].setPower(Range.clip(newPower, -1.0, 1.0))
 
         write()
         telemetry.addData("Speed Set", power)
@@ -259,6 +298,10 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         mLeaveTime.reset()
     }
 
+    fun isPress2(value : Boolean, previous : Boolean) : Boolean{
+        return value && !previous
+    }
+
     fun operate(g2 : Gamepad, g1 : Gamepad){
         motors.map {
             it.motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
@@ -269,9 +312,23 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         else{
             gff = 0.1
         }
+        if(isPress2(g2.y, previous)){
+            depositCheck = !depositCheck
+        }
+        previous = g2.y
+
+        /*if(isPress2(g2.a, previous2)){
+            newState(slideState.STATE_CAPSTONE)
+        }
+        previous2 = g2.a*/
+
         if (g2.x){
             newState(slideState.STATE_RAISE)
         }else if(g1.right_bumper){
+            if(depositCheck){
+                newState(slideState.STATE_LEAVE_STACK)
+            }
+            increaseQueried = true
             //newState(slideState.STATE_LEAVE_STACK)
         }else if (g2.b){
             newState(slideState.STATE_DROP)
@@ -319,7 +376,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
                     }
                 }else if(mLeaveState == leaveState.STATE_RAISE){
                     if(abs((savedPos + 570 / 2) - getLiftHeight()) >= 15.0 && mLeaveTime.time() < 1.0){
-                        PIDController(savedPos + 570)
+                        PIDControllerPos(savedPos + 570)
                     }else{
                         setPower(0.0)
                         newLeaveState(leaveState.STATE_RETURN)
@@ -331,50 +388,30 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
                         setPower(0.0)
                         flip.operate(2)
                     }
+                    if (increaseQueried) {
+                        increment_stack_count()
+                        increaseQueried = false
+                    }
                 }
-            }else{
-                if (first){
-                    first = false
-                    Mecanum_Drive.capTime.reset()
+            }else {
+                if (mStateTime.time() >= 1.0) {
+                    newState(slideState.STATE_IDLE)
+                } else {
+                    if (first) {
+                        first = false
+                        Mecanum_Drive.capTime.reset()
+                    }
+                    flip.operate(5)
                 }
-                flip.operate(5)
+                flip.write()
             }
-            /*
-            if(stack_count <= 10 && drive.getCapstoneR() == false){
-                fine_tune = 1.0
-                if(mLeaveState == leaveState.STATE_IDLE){
-                    newLeaveState(leaveState.STATE_DROP)
-                }else if(mLeaveState == leaveState.STATE_DROP){
-                    if(mLeaveTime.time() >= 0.5){
-                        newLeaveState(leaveState.STATE_RAISE)
-                    }else{
-                        flip.unclamp()
-                        flip.write()
-                    }
-                }else if(mLeaveState == leaveState.STATE_RAISE){
-                    if(abs(TargetPos[stack_count + 1] - getLiftHeight()) >= 10.0){
-                        PIDController(stack_count + 1)
-                    }else{
-                        setPower(0.0)
-                        newLeaveState(leaveState.STATE_RETURN)
-                    }
-                }else if(mLeaveState == leaveState.STATE_RETURN){
-                    if(mLeaveTime.time() >= 0.75){
-                        newState(slideState.STATE_DROP)
-                    }else{
-                        setPower(0.0)
-                        flip.operate(2)
-                    }
-                }
-            }else{
-                flip.operate(1)
-            }
-             */
         }else if (mSlideState == slideState.STATE_RAISE) {
                 PIDController(stack_count)
             if(stack_count <= 4){
-                if (abs(TargetPos[stack_count] - getLiftHeight()) < 102.6 * 2) {
-                    flip.operate(0)
+                if (abs(TargetPos[stack_count] - getLiftHeight()) < 102.6 / 2) {
+                    if(stack_count != 2 && stack_count != 3 && stack_count != 4){
+                        flip.operate(0)
+                    }
                 }
                 if (Math.abs(g2.right_stick_y) >= 0.15) {
                     newState(slideState.STATE_IDLE)
@@ -391,11 +428,17 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         else if (mSlideState == slideState.STATE_DROP){
             fine_tune = 1.0
             dropSlides(-0.75)
-            flip.operate(2)
+            if (stack_count > 4) {
+                flip.operate(2)
+            }
             if(getLiftHeight() <= DROPDOWNPOS){
                 setPower(0.0)
                 newLeaveState(leaveState.STATE_IDLE)
                 newState(slideState.STATE_IDLE)
+            }
+            if (increaseQueried) {
+                increment_stack_count()
+                increaseQueried = false
             }
         }
         else if (mSlideState == slideState.STATE_IDLE){
@@ -413,17 +456,23 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
 
              */
             if(g2.right_stick_y < 0){
-                setPower(-0.35 * g2.right_stick_y)
+                setPower(-0.35 * g2.right_stick_y) //UP
             }else{
-                setPower(-0.25 * g2.right_stick_y)
+                setPower(-0.1 * g2.right_stick_y) //DOWN
+            }
+        }else if (mSlideState == slideState.STATE_CAPSTONE){
+            if(stack_count > 1) {
+                PIDControllerPos(TargetPos[stack_count - 2] + (Math.abs(TargetPos[stack_count - 1] - TargetPos[stack_count - 2]) / 2).toDouble())
+            }
+            if (Math.abs(g2.right_stick_y) >= 0.15) {
+                newState(slideState.STATE_IDLE)
             }
         }
         /*if (mSlideState != slideState.STATE_RAISE) {
             write()
         }*/
-        telemetry.addData("Joystick Power: ", g2.right_stick_y);
+        telemetry.addData("Joystick Power: ", g2.right_stick_y)
         telemetry.addData("Level:", stack_count)
-        telemetry.addData("Leave State: ", mLeaveState)
-        telemetry.addData("mLeaveTime: ", mLeaveTime.time())
+        telemetry.addData("Feeder: ", depositCheck)
     }
 }

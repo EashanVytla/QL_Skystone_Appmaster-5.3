@@ -59,8 +59,7 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
     }
 
     public double getAbsoluteAngle(){
-        heading = angleWrap((encoderTicksToInches(positions[1]) - encoderTicksToInches(positions[0])) / LATERAL_DISTANCE);
-        heading -= startheading;
+        heading = angleWrap((encoderTicksToInches(positions[1]) - encoderTicksToInches(positions[0])) / LATERAL_DISTANCE + (Math.PI / 2));
         return heading;
     }
 

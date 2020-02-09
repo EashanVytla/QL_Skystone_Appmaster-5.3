@@ -41,22 +41,24 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     var lock = false
     var first = false
 
+    var previousA = false
+
     companion object {
         var capped = false
         var rcase = 0
-        const val case_right_turn_value = 0.825
-        const val case_left_turn_value = 0.15
-        const val case_center_turn_value = 0.51
+        const val case_right_turn_value = 0.88
+        const val case_left_turn_value = 0.125
+        const val case_center_turn_value = 0.48
 
         const val handshake_flip_position = 0.4 //THIS IS GOING BACKWARDS 1 -> 0
 
         const val turnPos_IDOL = 0.48 //0.4975 //0.4935
         const val flipperPos_IDOL = 0.975 //THIS IS GOING BACKWARDS 1 -> 0
-        const val DepositPos_IDOL = 0.13//THIS IS GOING BACKWARDS 1 -> 0
+        const val DepositPos_IDOL = 0.15//THIS IS GOING BACKWARDS 1 -> 0
 
-        const val DepositPos = 1.0//0.8 //changed
-        const val Deposit_Clearance_DROPPING_Block = 0.925 //0.85 //0.65 //changed
-        const val Deposit_Clearance_HANDSHAKE = 0.15//0.1375
+        const val DepositPos = 1.0
+        const val Deposit_Clearance_DROPPING_Block = 0.9
+        const val Deposit_Clearance_HANDSHAKE = 0.17
         var knocker = false
     }
 
@@ -128,7 +130,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         deposit.setPosition(DepositPos_IDOL)
         time.startTime()
         flipper.setPosition(flipperPos_IDOL)
-        capClamp.setPosition(1.0)
+        capClamp.setPosition(0.5)
         capDeposit.setPosition(0.0)
         newState(flip_state.STATE_IDLE)
         write()
@@ -207,8 +209,9 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     }
 
     fun grabPlatform(){
-        leftpm.setPosition(1.0)
-        rightpm.setPosition(0.0)
+        leftpm.setPosition(0.37)//(0.35)
+        rightpm.setPosition(0.63)//(0.65)
+
         grabbed = true
 
         write()
@@ -219,15 +222,19 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     }
 
     fun startKnocker(){
-        leftpm.setPosition(0.725)
-        rightpm.setPosition(0.225)
+        leftpm.setPosition(0.5)
+        rightpm.setPosition(0.45)
 
         write()
     }
 
+    fun partialDeposit(){
+        deposit.setPosition(0.95)
+    }
+
     fun resetPlatform(){
-        leftpm.setPosition(0.35)
-        rightpm.setPosition(0.65)
+        leftpm.setPosition(1.0)
+        rightpm.setPosition(0.0)
         grabbed = false
         knocker = false
         write()
@@ -247,7 +254,8 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         clamp.setPosition(0.4)
     }
 
-    var previous10 = false;
+    var previous10 = false
+    var previous11 = false
 
     fun operate(g1: Gamepad, g2 : Gamepad){
         if(isPress(g2.b, previous2) /*|| isPress(g1.right_bumper, previous3)*/){
@@ -283,23 +291,27 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
                 capClamp.setPosition(1.0)
                 clamped = true
             }else{
-                capClamp.setPosition(0.9)
+                capClamp.setPosition(0.5)
                 clamped = false
             }
         }
 
-        if (isPress(g1.right_bumper, previous3)){
+        if (isPress(g1.right_bumper, previous3) && !Vertical_Elevator.depositCheck){
             newState(flip_state.STATE_DROP)
         }
 
         if(isPress(g2.dpad_left, previouscap)){
             if(!capped){
-                capDeposit.setPosition(1.0)
+                capDeposit.setPosition(0.0)
                 capped = true
             }else{
-                capDeposit.setPosition(0.0)
+                capDeposit.setPosition(1.0)
                 capped = false
             }
+        }
+
+        if (isPress(g2.a, previousA)){
+            newState(flip_state.STATE_IDLE)
         }
 
         previousclamp = g2.dpad_right
@@ -308,8 +320,9 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         previous2 = g2.b
         previous3 = g1.right_bumper
         previous4 = g2.right_bumper
+        previousA = g2.a
 
-        if(g2.left_bumper){
+        if(isPress(g2.left_bumper, previous11)){
             if(getCase() == 0) {
                 //Case regular
                 turnPos = case_center_turn_value
@@ -328,6 +341,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
                 newState(flip_state.STATE_REALLIGN)
             }
         }
+        previous11 = g2.left_bumper
         if (betterFlipState == flip_state.STATE_FLIP){
             unclamp()
             if(time.time() >= 0.2){ //Wait for setup procedure before flipping
@@ -370,6 +384,9 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
             unclamp()
             if(time.time() >= 0.1){
                 flipper.setPosition(handshake_flip_position)
+                //turn.setPosition(turnPos)
+            }
+            if (time.time() >= 0.2){
                 turn.setPosition(turnPos)
             }
             if(time.time() >= 0.8){

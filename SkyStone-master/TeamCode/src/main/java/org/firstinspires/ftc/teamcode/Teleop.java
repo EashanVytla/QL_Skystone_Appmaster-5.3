@@ -86,6 +86,11 @@ public class Teleop extends OpMode{
         localizer = new SRX_Three_Wheel_Localizer(new SRX_Encoder("intake_left", hardwareMap), new SRX_Encoder("intake_right", hardwareMap), new SRX_Encoder("lift_2", hardwareMap), hardwareMap, telemetry);
     }
 
+    @Override
+    public void init_loop(){
+        flipper.resetPlatform();
+    }
+
     public enum State{
         IDLE,
         AUTOALLIGN,
@@ -115,6 +120,8 @@ public class Teleop extends OpMode{
     double heading = 0.0;
 
     public void loop() {
+        telemetry.addData("Slide Level: ", elevator.getStack_count());
+        telemetry.addData("Feeder Mode: ", elevator.getDepositCheck());
         long dt = System.currentTimeMillis() - prev_time;
         if (dt != 0.0){
             telemetry.addData("Refresh Rate: ", 1000 / dt);

@@ -347,7 +347,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             slow_mode = false
         }
 
-        if (isPress2(gamepad.left_bumper, previous3)){
+        if (isPress2(gamepad.left_bumper, previous3) && false){
             automateLock = !automateLock
         }
 

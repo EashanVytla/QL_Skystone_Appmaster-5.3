@@ -143,7 +143,7 @@ class SRX_Three_Wheel_Localizer(LeftWheel: SRX_Encoder, RightWheel: SRX_Encoder,
         pidr.setOutputBounds(-rspeed, rspeed)
 
 
-        currentPos = odos.poseEstimate
+        currentPos = Pose2d(odos.poseEstimate.vec(), odos.absoluteAngle)
 
         if(currentPos.heading <= Math.PI){
             heading = currentPos.heading
