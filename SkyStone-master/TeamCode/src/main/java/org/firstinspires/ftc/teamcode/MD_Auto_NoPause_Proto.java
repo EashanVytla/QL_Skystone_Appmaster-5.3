@@ -628,7 +628,7 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                     } else {
                         //flip.clamp();
                         intake.setPower(0.0);
-                        localizer.GoTo(new Pose2d(exit_pool3.getX(), exit_pool3.getY(), 0.0), 0.8, 0.8, 0.8);
+                        localizer.GoTo(new Pose2d(exit_pool3.getX(), exit_pool3.getY(), Math.PI / 4), 0.8, 0.8, 0.8);
                         mStateTime.reset();
                     }
                 }
