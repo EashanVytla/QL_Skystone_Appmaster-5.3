@@ -205,7 +205,6 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         motors[0].setPower(Range.clip(-newPower, -1.0, 1.0))
         motors[1].setPower(Range.clip(newPower, -1.0, 1.0))
 
-        write()
         telemetry.addData("Speed Set", power)
         telemetry.addData("Left: ", motors[0].motor.power)
         telemetry.addData("Right: ", motors[1].motor.power)
