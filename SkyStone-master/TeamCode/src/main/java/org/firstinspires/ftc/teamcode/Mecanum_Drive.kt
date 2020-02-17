@@ -397,10 +397,10 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
 
         if (slow_mode || slowmode2 || slow_mode4){
             fine_tune = 0.4
-            fine_tune_rot = 0.4
+            fine_tune_rot = 0.3
         }else if(slow_mode3){
             fine_tune = 0.45
-            fine_tune_rot = 0.4
+            fine_tune_rot = 0.3
         } else{
             fine_tune = 1.0
             fine_tune_rot = 0.5
@@ -423,7 +423,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             //capstoneStrafe()
             //targetTurn(Vector2d(fine_tune * gamepad.left_stick_y.toDouble(), fine_tune * gamepad.left_stick_x), Math.PI / 2)
         }
-        telemetry.addData("Capstone Readiness: ", capstone)
+        //telemetry.addData("Capstone Readiness: ", capstone)
         write()
     }
 

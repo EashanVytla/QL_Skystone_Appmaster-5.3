@@ -58,11 +58,11 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
     var Flipper_Midway_REALLIGN = 0.0 //THIS IS GOING BACKWARDS 1 -> 0
 
     fun clamp(){
-        clamp.setPosition(1.0)
+        clamp.setPosition(0.8)  //1.0 with the regular rev servo
     }
 
     fun unclamp(){
-        clamp.setPosition(0.7)
+        clamp.setPosition(0.625)  //0.725 with the regular rev servo
     }
 
     enum class flip_state{

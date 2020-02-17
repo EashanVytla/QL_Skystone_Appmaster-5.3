@@ -43,6 +43,7 @@ public class Teleop extends OpMode{
     boolean previous7 = false;
     boolean previous8 = false;
     boolean previous9 = false;
+    boolean previous10 = false;
 
     //ZONE 1 BOUNDS
     final double ZONE1_RIGHTBOUNDS = 0.0;
@@ -86,11 +87,6 @@ public class Teleop extends OpMode{
         localizer = new SRX_Three_Wheel_Localizer(new SRX_Encoder("intake_left", hardwareMap), new SRX_Encoder("intake_right", hardwareMap), new SRX_Encoder("lift_2", hardwareMap), hardwareMap, telemetry);
     }
 
-    @Override
-    public void init_loop(){
-        flipper.resetPlatform();
-    }
-
     public enum State{
         IDLE,
         AUTOALLIGN,
@@ -120,45 +116,48 @@ public class Teleop extends OpMode{
     double heading = 0.0;
 
     public void loop() {
-        telemetry.addData("Slide Level: ", elevator.getStack_count());
-        telemetry.addData("Feeder Mode: ", elevator.getDepositCheck());
         long dt = System.currentTimeMillis() - prev_time;
         if (dt != 0.0){
-            telemetry.addData("Refresh Rate: ", 1000 / dt);
+            //telemetry.addData("Refresh Rate: ", 1000 / dt);
         }
-        telemetry.addData("Dt: ", dt);
+        //telemetry.addData("Dt: ", dt);
         prev_time = System.currentTimeMillis();
         RevBulkData data = hub2.getBulkInputData();
 
         if (data != null) {
             elevator.read(data);
             odos.dataUpdate(data);
+            odos.update();
         }
-        odos.update();
-        Pose2d currentPos = odos.getEstimatedPose();
 
+        Pose2d currentPos = new Pose2d(odos.getEstimatedPose().getX(), odos.getEstimatedPose().getY(), heading);
+
+        if (currentPos.getHeading() <= Math.PI) {
+            heading = currentPos.getHeading();
+        } else {
+            heading = -((2 * Math.PI) - currentPos.getHeading());
+        }
 
         if (gamepad1 != null && gamepad2 != null) {
             //todo: Tune these:
             elevator.operate(gamepad2, gamepad1);
-            if (odos.getPoseEstimate().getY() >= ZONE1_LEFTBOUNDS && odos.getPoseEstimate().getY() <= ZONE1_RIGHTBOUNDS && odos.getPoseEstimate().getX() > ZONE1_UPPERBOUNDS) {
+            if (odos.getEstimatedPose().getY() >= ZONE1_LEFTBOUNDS && odos.getEstimatedPose().getY() <= ZONE1_RIGHTBOUNDS && odos.getEstimatedPose().getX() > ZONE1_UPPERBOUNDS) {
                 zone = 1;
-            } else if (odos.getPoseEstimate().getY() >= ZONE0_LEFTBOUNDS && odos.getPoseEstimate().getY() <= ZONE0_RIGHTBOUNDS && odos.getPoseEstimate().getX() > ZONE0_UPPERBOUNDS) {
+            } else if (odos.getEstimatedPose().getY() >= ZONE0_LEFTBOUNDS && odos.getEstimatedPose().getY() <= ZONE0_RIGHTBOUNDS && odos.getEstimatedPose().getX() > ZONE0_UPPERBOUNDS) {
                 zone = 0;
-            } else if (odos.getPoseEstimate().getY() >= ZONE2_LEFTBOUNDS && odos.getPoseEstimate().getY() <= ZONE2_RIGHTBOUNDS && odos.getPoseEstimate().getX() > ZONE2_UPPERBOUNDS) {
+            } else if (odos.getEstimatedPose().getY() >= ZONE2_LEFTBOUNDS && odos.getEstimatedPose().getY() <= ZONE2_RIGHTBOUNDS && odos.getEstimatedPose().getX() > ZONE2_UPPERBOUNDS) {
                 zone = 2;
             }
             localizer.updateodos();
 
-            if (currentPos.getHeading() <= Math.PI) {
-                heading = currentPos.getHeading();
-            } else {
-                heading = -((2 * Math.PI) - currentPos.getHeading());
-            }
-
             if (isPress2(gamepad1.y, previous6)){
                 odos.poseSet(new Pose2d(0.0,0.0,0.0));
             }
+
+            if(isPress2(gamepad1.right_bumper, previous10)){
+                odos.poseSet(new Pose2d(0.0,0.0,0.0));
+            }
+            previous10 = gamepad1.right_bumper;
 
             if (isPress2(gamepad1.right_bumper, previous7)){
                 if(Mecanum_Drive.Companion.getCapstone()){
@@ -167,7 +166,7 @@ public class Teleop extends OpMode{
                 }
             }
 
-            telemetry.addData("Zone: ", zone);
+            //telemetry.addData("Zone: ", zone);
 
             drive.setCurrentPos(new Pose2d(currentPos.getX(), currentPos.getY(), heading));
             drive.drive(gamepad1, gamepad2);
@@ -176,10 +175,11 @@ public class Teleop extends OpMode{
             drive.setPower(0.0, 0.0, 0.0);
             drive.write();
         }
+        telemetry.addData("Level:", elevator.getStack_count());
+        telemetry.addData("Feeder: ", Vertical_Elevator.Companion.getDepositCheck());
 
-
-        telemetry.addData("current pos: ", drive.getCurrentPos().toString());
-        //telemetry.addData("Position: ", drive.getOdos().getPoseEstimate());
+        //telemetry.addData("current pos: ", drive.getCurrentPos().toString());
+        telemetry.addData("Position: ", drive.getOdos().getEstimatedPose());
         //telemetry.addData("Stored Position: ", drive.getPosition().toString());
         //telemetry.addData("pos: ", pos.toString());
         //telemetry.addData("State: ", automationSt);
@@ -201,49 +201,6 @@ public class Teleop extends OpMode{
 
         telemetry.addData("Slide Pos: ", elevator.getLiftHeight());
         telemetry.addData("Slide Error: ", elevator.getError());
-        /*
 
-
-        telemetry.addData("Case: ", flipper.getRCase());
-
-        //telemetry.addData("Boundry Condition", elevator.getBoundaryConditions());
-
-        //telemetry.addData("Drive Vector: ", v.toString());
-
-        //telemetry.addData("Intake Left Motor Power", intake.getMotors()[0].getMotor().getPower());
-        //telemetry.addData("Intake Right Motor Power", intake.getMotors()[1].getMotor().getPower());
-
-        //telemetry.addData("Intake Left prev power", intake.getMotors()[0].getPrev_power());
-        //telemetry.addData("Intake Right prev power", intake.getMotors()[1].getPrev_power());
-
-        //telemetry.addData("Up Left Power: ", drive.getMotors().get(0).getPrev_power());
-        //telemetry.addData("Back Left Power: ", drive.getMotors().get(1).getPrev_power());
-        //telemetry.addData("Back Right Power: ", drive.getMotors().get(2).getPrev_power());
-        //telemetry.addData("Up Right Power: ", drive.getMotors().get(3).getPrev_power());
-
-        //telemetry.addData("Refresh Rate: ", (System.currentTimeMillis() - prev_time));
-        //prev_time = System.currentTimeMillis();
-        //telemetry.addData("Write Frequency: 1 /", drive.getRefreshRate());
-
-
-        elevator.read(data);
-        //telemetry.addData("Slide Motor 2 Pos: ", elevator.getMotors()[1].getCurrentPosition());
-
-
-        telemetry.addData("Slide Power: ", gamepad2.right_stick_y);
-        //flipper.ShowPos();
-    }
-
-    private double getForwardDist(){
-        return leftWheel.getDistance() * (23 / 37.678);
-    }
-
-    private double getStrafeDist(){
-        return strafeWheel.getDistance() * 7.0 / 17.536;
-    }
-
-    private double getAngle(){return drive.angleWrap(drive.getExternalHeading());}
-
-         */
     }
 }

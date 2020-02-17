@@ -28,9 +28,9 @@ import org.openftc.revextensions2.RevExtensions2;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_HEIGHT;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_WIDTH;
 
-@Autonomous(name = "COOL_KID_AUTO_PROTO", group = "Competition")
+@Autonomous(name = "NYOOOOOOOOM", group = "Competition")
 //@Disabled
-public class MD_Auto_NoPause_Proto extends OpMode {
+public class RED_MD_Auto_NoPause_Proto extends OpMode {
     int SkystonePos;
 
     public OpenCvCamera webcam;
@@ -108,18 +108,16 @@ public class MD_Auto_NoPause_Proto extends OpMode {
         localizer = new SRX_Three_Wheel_Localizer(new SRX_Encoder("intake_left", hardwareMap), new SRX_Encoder("intake_right", hardwareMap), new SRX_Encoder("lift_2", hardwareMap), hardwareMap, telemetry);
         odos = new ThreeWheelTrackingLocalizer(this.hardwareMap);
 
-        odos.poseSet(new Pose2d(0, 0, Math.PI / 2));
-        localizer.getOdos().poseSet(new Pose2d(0, 0, Math.PI / 2));
+        odos.poseSet(new Pose2d(0, 0, -Math.PI / 2));
+        localizer.getOdos().poseSet(new Pose2d(0, 0, -Math.PI / 2));
+        localizer.inverse();
+        odos.inverse();
     }
 
     @Override
     public void init_loop(){
         SkystonePos = pipeline.getSkyPos();
-        if(SkystonePos == 0){
-            SkystonePos = 1;
-        }else if(SkystonePos == 1){
-            SkystonePos = 0;
-        }
+
         telemetry.addData("Skystone Pos: ", Math.abs(SkystonePos));
         flip.resetPlatform();
     }
@@ -132,7 +130,7 @@ public class MD_Auto_NoPause_Proto extends OpMode {
         newState(State.STATE_DRIVE_TO_BLOCK);
     }
 
-    Pose2d cross_target = new Pose2d(-27.172, -91.387, -Math.PI/2);
+    Pose2d cross_target = new Pose2d(-23.172, -91.387, -Math.PI/2);
     Pose2d return_target;
     Pose2d intake1;
     Pose2d intake2;
@@ -154,7 +152,7 @@ public class MD_Auto_NoPause_Proto extends OpMode {
     double heading = 0.0;
 
     public double getHeading(){
-        Pose2d currentPos = odos.getPoseEstimate();
+        Pose2d currentPos = odos.getEstimatedPose();
         odos.update();
 
         if(currentPos.getHeading() <= Math.PI){
@@ -173,24 +171,25 @@ public class MD_Auto_NoPause_Proto extends OpMode {
         odos.update();
         localizer.update(data);
         //Pose2d currentPos = odos.getPoseEstimate();
-        Pose2d currentPos = new Pose2d(odos.getPoseEstimate().vec(), odos.getAbsoluteAngle());
+        //Pose2d currentPos = new Pose2d(odos.getPoseEstimate().vec(), odos.getAbsoluteAngle());
+        Pose2d currentPos = new Pose2d(odos.getEstimatedPose().vec(), (2 * Math.PI) - odos.getAbsoluteAngle());
 
         if(SkystonePos == 0){
-            drive_to_block_target = new Pose2d(-24.068, 13.899, Math.toRadians(28.105));//toRadians(28.105)
+            drive_to_block_target = new Pose2d(-23.068, 14.899, Math.PI/4);//toRadians(28.105)
 
-            return_target = new Pose2d(-23.569, -10.559, Math.PI/4);
-            return_target2 = new Pose2d(-23.569, -30.559, Math.PI/4);
-            return_target3 = new Pose2d(-39.469, 3.063, Math.PI/4);
+            return_target = new Pose2d(-28.569, -15.559, Math.PI/4);
+            return_target2 = new Pose2d(-30, -30.559, Math.PI/4);
+            return_target3 = new Pose2d(-49.469, 3.063, Math.PI/4);
             //22.626
             exit_pool = new Pose2d(-18.020, 16.496, Math.PI/4);
-            exit_pool2 = new Pose2d(-27.020, -10.496, Math.PI/4);
-            exit_pool3 = new Pose2d(-28.020, -15.496, Math.PI/4);
-            exit_pool4 = new Pose2d(-28.806, 0.429,Math.PI/4);
+            exit_pool2 = new Pose2d(-32.020, -10.496, Math.PI/4);
+            exit_pool3 = new Pose2d(-33.020, -15.496, Math.PI/4);
+            exit_pool4 = new Pose2d(-33.806, 0.429,Math.PI/4);
 
-            intake1 = new Pose2d(-40.843, 16.816, Math.toRadians(28.105));
-            intake2 = new Pose2d(-38.689, 0.893, Math.PI/4);
-            intake3 = new Pose2d(-36.689, -16.893, Math.PI/4); //Send to state Stop and find the positions
-            intake4 = new Pose2d(-56.702, 13.165, Math.PI/4); //Send to state Stop and find the positions
+            intake1 = new Pose2d(-45.843, 19.816, Math.PI/4);
+            intake2 = new Pose2d(-43.689, 0.893, Math.PI/4);
+            intake3 = new Pose2d(-46.689, -16.893, Math.PI/4); //Send to state Stop and find the positions
+            intake4 = new Pose2d(-66.702, 13.165, Math.PI/4); //Send to state Stop and find the positions
         }else if(SkystonePos == 1){
             drive_to_block_target = new Pose2d(-24.000, 6, Math.PI/4);
 
@@ -208,30 +207,30 @@ public class MD_Auto_NoPause_Proto extends OpMode {
             intake3 = new Pose2d(-60, 3.870, Math.PI/4); //Send to state Stop and find the positions
             intake4 = new Pose2d(-43, 20, 0.0); //Send to state Stop and find the positions
         }else if(SkystonePos == 2){
-            drive_to_block_target = new Pose2d(-25.797, -3, Math.PI/4);
+            drive_to_block_target = new Pose2d(-29.797, -8, Math.PI/4);
 
-            return_target = new Pose2d(-23.569, -30.559, Math.PI/4);
-            return_target2 = new Pose2d(-44, -2, 0.0);
-            return_target3 = new Pose2d(-40, 9, 0.0);
+            return_target = new Pose2d(-28.569, -31.559, Math.PI/4);
+            return_target2 = new Pose2d(-54, -2, 0.0);
+            return_target3 = new Pose2d(-54, 9, 0.0);
             //22.626
             exit_pool = new Pose2d(-20.020, 8.496, Math.PI/4);
             //exit_pool2_real= new Pose2d(-15.020, -10.496, Math.PI/4);
             //exit_pool2 = new Pose2d( -5.0,-15, Math.PI/4);    //This is +5
             //exit_pool3_real = new Pose2d(-15.000, -2.5,0.0);
             //exit_pool3 = new Pose2d( -5.0,-7, 0.0); //This is +5
-            exit_pool2 = new Pose2d(-22.020, -15.496, Math.PI/4);
+            exit_pool2 = new Pose2d(-34.020, -15.496, Math.PI/4);
             exit_pool3 = new Pose2d(-20.000, -7.5,0.0);
-            exit_pool4 = new Pose2d(-18.822, -3.5,0.0);
+            exit_pool4 = new Pose2d(-25.822, -3.5,0.0);
 
-            intake1 = new Pose2d(-34.435, 7.8, Math.PI/4);
-            intake2 = new Pose2d(-36.689, -16.893, Math.PI/4);
-            intake3 = new Pose2d(-44, 15, 0.0);
-            intake4 = new Pose2d(-40, 26, 0.0);
+            intake1 = new Pose2d(-45.435, 4.8, Math.PI/4);
+            intake2 = new Pose2d(-60.689, -20.893, Math.PI/4);
+            intake3 = new Pose2d(-54, 15, 0.0);
+            intake4 = new Pose2d(-54, 26, 0.0);
         }
 
         switch (mRobotState) {
             case STATE_DRIVE_TO_BLOCK:
-                if(Math.abs(drive_to_block_target.getX() + currentPos.getY()) <= 2.0 && Math.abs(drive_to_block_target.getHeading() + currentPos.getHeading()) <= 2.0 && (Math.abs(drive_to_block_target.getX()) - Math.abs(currentPos.getY())) <= 2.0) {
+                if(Math.abs(drive_to_block_target.getX() + currentPos.getY()) <= 2.0 && Math.abs(drive_to_block_target.getHeading() - currentPos.getHeading()) <= 2.0 && (Math.abs(drive_to_block_target.getX()) - Math.abs(currentPos.getY())) <= 2.0) {
                     drive.setPower(0.0,0.0,0.0);
                     newState(State.STATE_INTAKE);
                 }else{
@@ -255,11 +254,15 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                 if(Math.abs(intake1.getX() + currentPos.getY()) <= 1.5 || flip.IntakeFeedback()){
                     localizer.getDrive().setPower(0.0, 0.0, 0.0);
                     localizer.getDrive().write();
-                    newState(State.STATE_HANDSHAKE);
+                    if(SkystonePos == 0){
+                        newState(State.STATE_EXIT_POOL);
+                    }else{
+                        newState(State.STATE_HANDSHAKE);
+                    }
                 }else{
                     intake.close();
                     if(SkystonePos == 0){
-                        localizer.GoTo(intake1, 0.2, 0.2, 0.2);
+                        localizer.GoTo(intake1, 0.3, 0.3, 0.3);
                     }else{
                         localizer.GoTo(intake1, 0.2, 0.2, 0.2);
                     }
@@ -267,7 +270,7 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                         intake.setPower(0.0);
                     }else{
                         if(SkystonePos == 0){
-                            intake.setPower(0.5);
+                            intake.setPower(0.3);
                         }else{
                             intake.setPower(0.3);
                         }
@@ -292,16 +295,36 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                 }
                 break;
             case STATE_EXIT_POOL:
-                if (Math.abs(exit_pool.getY() - currentPos.getX()) <= 4.0) {
-                    newState(State.STATE_CROSS);
-                } else if (delay.time() >= 3.0) {
-                    newState(State.STATE_CROSS);
-                } else {
-                    intake.setPower(0.0);
-                    localizer.GoTo(exit_pool, 1.0, 1.0, 1.0);
-                }
-                if(currentPos.getX() <= -5){
-                    flip.clamp();
+                if(SkystonePos == 0){
+                    if (Math.abs(exit_pool.getX() + currentPos.getY()) <= 4.0 || delay.time() >= 3.0) {
+                        flip.clamp();
+                        newState(State.STATE_CROSS);
+                    }else {
+                        if(delay.time() >= 0.3){
+                            intake.setPower(0.0);
+                            intake.open();
+                            flip.unclamp();
+                            flip.flipflipper();
+                        }else{
+                            intake.setPower(0.3);
+                        }
+                        localizer.GoTo(exit_pool, 1.0, 1.0, 1.0);
+                    }
+                    if(delay.time() >= 0.8){
+                        flip.clamp();
+                    }
+                }else{
+                    if (Math.abs(exit_pool.getY() - currentPos.getX()) <= 4.0) {
+                        newState(State.STATE_CROSS);
+                    } else if (delay.time() >= 3.0) {
+                        newState(State.STATE_CROSS);
+                    } else {
+                        intake.setPower(0.0);
+                        localizer.GoTo(exit_pool, 1.0, 1.0, 1.0);
+                    }
+                    if(currentPos.getX() <= -5){
+                        flip.clamp();
+                    }
                 }
                 break;
             case STATE_CROSS:
@@ -315,7 +338,7 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                 }else{
                     intake.setPower(0.15);
                     flip.startKnocker();
-                    if(currentPos.getX() <= -30){
+                    if(currentPos.getX() <= -38){
                         localizer.GoTo(cross_target, 1.0, 1.0, 1.0);
                         flip.flipDown();
                     }else{
@@ -343,7 +366,7 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                     intake.open();
                     flip.flipDown();
                     //flip.clamp();
-                    localizer.GoTo(new Pose2d(-34.885, -92.7, -Math.PI/2), 1.0, 1.0, 1.0);
+                    localizer.GoTo(new Pose2d(-35.885, -92.7, -Math.PI/2), 1.0, 1.0, 1.0);
                 }
                 break;
             case STATE_GRAB_FOUNDATION:
@@ -370,13 +393,15 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                 }
                 break;
             case STATE_TURN:
-                if(getHeading() >= Math.toRadians(-10.0) || mStateTime.time() >= 3.0) {
+                if(getHeading() >= Math.toRadians(-10.0)) {
                     localizer.getDrive().setPower(0.0,0.0,0.0);
                     localizer.getDrive().write();
                     drive.setPower(0.0, 0.0, 0.0);
                     newState(State.STATE_RETURN);
                 }else{
-                    localizer.GoTo(new Pose2d(-8.783, -70.605, Math.PI / 4), 1.0, 1.0, 1.0);
+                    //localizer.GoTo(new Pose2d(-8.783, -70.605, (Math.PI / 2) + Math.toRadians()), 1.0, 1.0, 1.0);
+                    localizer.getDrive().setPower(0.0,0.0,-1.0);
+                    localizer.getDrive().write();
                     //localizer.GoTo(new Pose2d(-8.783, -70.605, 0.0), 1.0, 1.0, 1.0);
                     //flip.operate(2);
                     if (Math.abs(getHeading()) < Math.toRadians(25)){
@@ -456,7 +481,7 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                 if(SkystonePos == 0){
                     saved_deposit = new Pose2d(-23.075, -81.972, 0.0);
                 }else if(SkystonePos == 2){
-                    saved_deposit = new Pose2d(-23.075, -81.972, 0.0);
+                    saved_deposit = new Pose2d(-28.075, -80.972, 0.0);
                 }else if(SkystonePos == 1){
                     saved_deposit = new Pose2d(-23.075, -81.972, 0.0);
                 }
@@ -505,16 +530,17 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                         newState(State.STATE_INTAKE3);
                     } else {
                         flip.resetPlatform();
-                        if (currentPos.getX() >= -20) {
+                        if (currentPos.getX() >= -27) {
                             localizer.GoTo(return_target2, 1.0, 1.0, 1.0);
                         } else {
                             if(SkystonePos == 1 || SkystonePos == 0){
                                 localizer.GoTo(new Pose2d(return_target2.getX(), return_target2.getY(), 0.0), 1.0, 1.0, 1.0);
                             }else{
-                                localizer.GoTo(new Pose2d(-19.5, return_target2.getY(), 0.0), 1.0, 1.0, 1.0);
+                                localizer.GoTo(new Pose2d(-23.5, return_target2.getY(), 0.0), 1.0, 1.0, 1.0);
                             }
 
                         }
+                        flip.operate(1);
                         if (currentPos.getX() >= return_target2.getY() / 3) {
                             intake.close();
                             intake.setPower(0.3);
@@ -522,9 +548,7 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                             intake.setPower(-1.0);
                         }
                         mStateTime.reset();
-                        flip.operate(1);
                     }
-
                 }
                 else{
                     if (delay.time() >= 0.5) {
@@ -584,11 +608,11 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                 break;
             case STATE_CROSS3:
                 if(SkystonePos == 0){
-                    saved_deposit = new Pose2d(-24.428, -79.072, Math.toRadians(5));
+                    saved_deposit = new Pose2d(-24.428, -79.072, Math.toRadians(0));
                 }else if(SkystonePos == 1){
-                    saved_deposit = new Pose2d(-22.428, -79.072, Math.toRadians(5));
+                    saved_deposit = new Pose2d(-22.428, -79.072, Math.toRadians(0));
                 }else if(SkystonePos == 2){
-                    saved_deposit = new Pose2d(-22.428, -79.072, Math.toRadians(5));
+                    saved_deposit = new Pose2d(-22.428, -80.072, Math.toRadians(0));
                 }
                 if(Math.abs(saved_deposit.getY() - currentPos.getX()) <= 8.0 && Math.abs(saved_deposit.getX() + currentPos.getY()) <= 2.0 || delay.time() >= 5.0) {
                     localizer.getDrive().setPower(0.0,0.0,0.0);
@@ -644,13 +668,13 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                             localizer.GoTo(return_target3, 1.0, 1.0, 1.0);
                         } else {
                             if (SkystonePos == 1){
-                                localizer.GoTo(new Pose2d(-17.5, return_target3.getY(), 0.0), 1.0, 1.0, 1.0);
+                                localizer.GoTo(new Pose2d(-17.5, return_target3.getY(), Math.toRadians(5)), 1.0, 1.0, 1.0);
                             }
                             else if(SkystonePos == 0){
-                                localizer.GoTo(new Pose2d(-22, return_target3.getY(), 0.0), 1.0, 1.0, 1.0);
+                                localizer.GoTo(new Pose2d(-22, return_target3.getY(), Math.toRadians(5)), 1.0, 1.0, 1.0);
                             }
                             else{
-                                localizer.GoTo(new Pose2d(-17.5, return_target3.getY(), 0.0), 1.0, 1.0, 1.0);
+                                localizer.GoTo(new Pose2d(-25.5, return_target3.getY(), Math.toRadians(5)), 1.0, 1.0, 1.0);
                             }
 
                         }
@@ -709,7 +733,7 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                 }else if(SkystonePos == 1){
                     saved_deposit = new Pose2d(-20.912, -79.249, Math.toRadians(10));
                 }else if(SkystonePos == 2){
-                    saved_deposit = new Pose2d(-19.912, -79.249, Math.toRadians(10));
+                    saved_deposit = new Pose2d(-22.912, -79.249, Math.toRadians(10));
                 }
                 if(Math.abs(saved_deposit.getY() - currentPos.getX()) <= 8.0 && Math.abs(saved_deposit.getX() + currentPos.getY()) <= 2.0 || delay.time() >= 5.0) {
                     localizer.getDrive().setPower(0.0,0.0,0.0);
@@ -789,7 +813,7 @@ public class MD_Auto_NoPause_Proto extends OpMode {
                         }
                         intake.close();
                         intake.setPower(0.0);
-                        localizer.GoTo(new Pose2d(-16.922, -38.976, 0.0), 1.0, 1.0, 1.0);
+                        localizer.GoTo(new Pose2d(-20.922, -36.976, Math.toRadians(15)), 1.0, 1.0, 1.0);
                         mStateTime.reset();
                     }
                 }
@@ -814,9 +838,6 @@ public class MD_Auto_NoPause_Proto extends OpMode {
         telemetry.addData("POS: ", currentPos.toString());
         telemetry.addData("State: ", mRobotState);
         telemetry.addData("time: ", mStateTime.time());
-        telemetry.addData("Saved Pos: ", saved_deposit.toString());
-        telemetry.addData("Saved Pos Strafe: ", storedY);
-        telemetry.addData("cross_target", cross_target.getY());
 
         //slides.write();
         if (mRobotState != State.STATE_PUSH_BACK) {

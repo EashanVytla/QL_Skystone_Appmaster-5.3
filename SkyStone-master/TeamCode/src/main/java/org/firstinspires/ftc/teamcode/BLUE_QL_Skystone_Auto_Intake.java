@@ -281,7 +281,7 @@ public class BLUE_QL_Skystone_Auto_Intake extends OpMode {
                 if(currentPos.getX() <= -85) {
                     if(mStateTime.time() >= 0.5){
                         drive.setPower(0.0,0.0,0.0);
-                        newState(State.STATE_DRIVE_TO_FOUNDATION);
+                        newState(State.STATE_DRIVE_TO_FOUNDATION);;
                     }else{
                         localizer.GoTo(cross_target, 0.15, 0.15, 0.15);
                     }

@@ -86,7 +86,7 @@ class Intake(hardwareMap: HardwareMap) {
     }
 
     fun operate(g1 : Gamepad, g2: Gamepad){
-        setPower((0.35 * g1.right_trigger) - (0.2 * g1.left_trigger))
+        setPower((0.5 * g1.right_trigger) - (0.5 * g1.left_trigger))
 
         if(g2.left_bumper){
             newState(clamp.OPEN)

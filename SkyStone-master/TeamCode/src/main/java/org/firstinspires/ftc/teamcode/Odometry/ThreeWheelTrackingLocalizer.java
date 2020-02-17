@@ -24,7 +24,10 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
 
     private int[] positions = {0, 0, 0};
     public double heading;
-    public double startheading;
+    public double startheading = 0.0;
+    public boolean inverse = false;
+    public Pose2d currentPos;
+    public double offset = 0.0;
 
     public ThreeWheelTrackingLocalizer(HardwareMap hardwareMap) {
         super(Arrays.asList(
@@ -59,13 +62,17 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
     }
 
     public double getAbsoluteAngle(){
-        heading = angleWrap((encoderTicksToInches(positions[1]) - encoderTicksToInches(positions[0])) / LATERAL_DISTANCE + (Math.PI / 2));
+        heading = angleWrap((encoderTicksToInches(positions[1]) - encoderTicksToInches(positions[0])) / LATERAL_DISTANCE + startheading);
         return heading;
     }
 
     public void poseSet(Pose2d pos){
         startheading = pos.getHeading();
-        setPoseEstimate(pos);
+        setPos(pos);
+    }
+
+    public void inverse(){
+        inverse = true;
     }
 
     public double getstrafeDiff(){
@@ -73,7 +80,13 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
     }
 
     public Pose2d getEstimatedPose(){
-        return new Pose2d(getPoseEstimate().getX(), getPoseEstimate().getY(), getAbsoluteAngle());
+        if(inverse){
+            currentPos = new Pose2d(getPoseEstimate().getX(), -getPoseEstimate().getY(), (2 * Math.PI) - getAbsoluteAngle());
+        }else{
+            currentPos = new Pose2d(getPoseEstimate().getX(), getPoseEstimate().getY(), getAbsoluteAngle());
+        }
+
+        return currentPos;
     }
 
     private double angleWrap(double theta){
