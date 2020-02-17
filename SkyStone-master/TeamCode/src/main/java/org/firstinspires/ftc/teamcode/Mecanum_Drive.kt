@@ -347,7 +347,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             slow_mode = false
         }
 
-        if (isPress2(gamepad.left_bumper, previous3) && false){
+        if (isPress2(gamepad.left_bumper, previous3)){
             automateLock = !automateLock
         }
 
@@ -572,6 +572,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         motors.forEach {
             it.read(data)
         }
+        /*
         headingReadCount++
         if (headingAccessCount.toDouble() / headingReadCount.toDouble() < headingUpdateFrequency || true) {
             headingAccessCount++
@@ -579,6 +580,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             orientation = imu.angularOrientation
         }
         headingReadCount++
+         */
     }
 
     fun setPower(y : Double, x : Double, rightX : Double){

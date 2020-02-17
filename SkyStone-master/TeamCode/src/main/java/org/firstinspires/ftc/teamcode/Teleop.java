@@ -154,10 +154,12 @@ public class Teleop extends OpMode{
                 odos.poseSet(new Pose2d(0.0,0.0,0.0));
             }
 
+            /*
             if(isPress2(gamepad1.right_bumper, previous10)){
                 odos.poseSet(new Pose2d(0.0,0.0,0.0));
             }
             previous10 = gamepad1.right_bumper;
+             */
 
             if (isPress2(gamepad1.right_bumper, previous7)){
                 if(Mecanum_Drive.Companion.getCapstone()){
@@ -196,8 +198,8 @@ public class Teleop extends OpMode{
         telemetry.addData("DRIVETRAIN MODE", (drive.getMode() ? "Slow Mode" : "Regular Speed"));
         //telemetry.addData("1mAngle: ", drive.getExternalHeading());
 
-        Vector2 v = new Vector2(gamepad1.left_stick_x, gamepad1.left_stick_y);
-        v.rotate(-drive.getExternalHeading());
+        //Vector2 v = new Vector2(gamepad1.left_stick_x, gamepad1.left_stick_y);
+        //v.rotate(-drive.getExternalHeading());
 
         telemetry.addData("Slide Pos: ", elevator.getLiftHeight());
         telemetry.addData("Slide Error: ", elevator.getError());
