@@ -28,7 +28,7 @@ import org.openftc.revextensions2.RevExtensions2;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_HEIGHT;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_WIDTH;
 
-@Autonomous(name = "NYOOOOOOOOM", group = "Competition")
+@Autonomous(name = "RED_4Stone_Auto", group = "Competition")
 //@Disabled
 public class RED_MD_Auto_NoPause_Proto extends OpMode {
     int SkystonePos;
@@ -194,7 +194,7 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
             drive_to_block_target = new Pose2d(-25.000, 1, Math.PI/4);
 
             return_target = new Pose2d(-27.569, -21.559, Math.PI/4);
-            return_target2 = new Pose2d(-30.5, -31.906, Math.PI/4);
+            return_target2 = new Pose2d(-26.5, -31.906, Math.PI/4);
             return_target3 = new Pose2d(-54, 9.379, 0.0);
             //22.626
             exit_pool = new Pose2d(-20.020, 8.496, Math.PI/4);
@@ -235,7 +235,6 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
                     newState(State.STATE_INTAKE);
                 }else{
                     flip.start();
-                    intake.setPower(0.0);
                     if(SkystonePos == 0){
                         localizer.GoTo(drive_to_block_target, 1.0, 1.0, 0.8);
                     }else{
@@ -243,7 +242,6 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
                     }
                     mStateTime.reset();
                     intake.kickout();
-                    intake.open();
                 }
                 if (delay.time() >= 1.0){
                     intake.close();
@@ -298,7 +296,7 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
                 if(SkystonePos == 0){
                     if (Math.abs(exit_pool.getX() + currentPos.getY()) <= 4.0 || delay.time() >= 3.0) {
                         intake.setPower(0.0);
-                        flip.clamp();
+                        //flip.clamp();
                         newState(State.STATE_CROSS);
                     }else {
                         if(delay.time() >= 0.3){
@@ -314,7 +312,7 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
                         }
                         localizer.GoTo(exit_pool, 1.0, 1.0, 1.0);
                     }
-                    if(currentPos.getX() <= 5){
+                    if(currentPos.getX() <= -10){
                         flip.clamp();
                     }
                 }else{
@@ -326,7 +324,7 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
                         intake.setPower(0.0);
                         localizer.GoTo(exit_pool, 1.0, 1.0, 1.0);
                     }
-                    if(currentPos.getX() <= -5){
+                    if(currentPos.getX() <= 5){
                         flip.clamp();
                     }
                 }
@@ -356,9 +354,16 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
                     }
 
                 }
-                if(currentPos.getX() <= -5){
-                    flip.clamp();
+                if(SkystonePos == 0){
+                    if(currentPos.getX() <= -10){
+                        flip.clamp();
+                    }
+                }else{
+                    if(currentPos.getX() <= 5){
+                        flip.clamp();
+                    }
                 }
+
                 telemetry.addData("Is Grabbed? ", flip.isGrabbed());
                 break;
             case STATE_DRIVE_TO_FOUNDATION:
@@ -493,6 +498,7 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
                 }
                 if(Math.abs(saved_deposit.getY() - currentPos.getX()) <= 8.0 && Math.abs(saved_deposit.getX() + currentPos.getY()) <= 2.0 || delay.time() >= 3.0) {
                     //flip.flipDown();
+                    slides.setPower(0.0);
                     localizer.getDrive().setPower(0.0,0.0,0.0);
                     drive.setPower(0.0,0.0,0.0);
                     localizer.getDrive().write();
@@ -508,6 +514,10 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
                         if (Math.abs(-78.972 - currentPos.getX()) > 40) {
                             flip.operate(4);
                         }
+                    }
+                    if(Math.abs(currentPos.getX()) >= 35){
+                        slides.PIDController(1);
+                        slides.setStack_count(1);
                     }
                     if (Math.abs(-78.972 - currentPos.getX()) <= 35){
                         flip.operate(0);
@@ -536,6 +546,9 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
                         newState(State.STATE_INTAKE3);
                     } else {
                         flip.resetPlatform();
+                        if(Math.abs(currentPos.getX()) < 70){
+                            slides.dropSlides(-0.75);
+                        }
                         if (currentPos.getX() >= -27) {
                             localizer.GoTo(return_target2, 1.0, 1.0, 1.0);
                         } else {
@@ -560,6 +573,7 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
                     if (delay.time() >= 0.5) {
                         flip.operate(1);
                     }
+                    slides.setPower(0.0);
                     localizer.GoTo(saved_deposit, 1.0,1.0,1.0);
                 }
                 break;
@@ -839,6 +853,9 @@ public class RED_MD_Auto_NoPause_Proto extends OpMode {
 
                 telemetry.addData("Tee Hee :)", "Deal with it this is my senior year");
                 telemetry.addData("Tee Hee :)", "I Kicked you out of All your Discords");
+                telemetry.addData("Tee Hee :)", "My Name is Eashan and I'm a bitch. I like to break Odo wheels and suck dick.");
+                telemetry.addData("Tee Hee :)", "My Name is Eashan and I'm a bitch. I like to break Odo wheels and suck dick.");
+                telemetry.addData("Tee Hee :)", "My Name is Eashan and I'm a bitch. I like to break Odo wheels and suck dick.");
                 break;
         }
         telemetry.addData("POS: ", currentPos.toString());

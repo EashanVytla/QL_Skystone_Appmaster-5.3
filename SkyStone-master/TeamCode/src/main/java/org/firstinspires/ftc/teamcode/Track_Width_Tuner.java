@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.Odometry.ThreeWheelTrackingLocalizer;
@@ -11,6 +12,7 @@ import org.openftc.revextensions2.RevExtensions2;
 import java.util.ArrayList;
 
 @Autonomous(name = "Track Width Tuner", group = "Proto")
+@Disabled
 public class Track_Width_Tuner extends OpMode {
     Mecanum_Drive drive;
     ThreeWheelTrackingLocalizer odos;

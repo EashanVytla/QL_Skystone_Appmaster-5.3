@@ -161,12 +161,15 @@ public class Teleop extends OpMode{
             previous10 = gamepad1.right_bumper;
              */
 
+            /*
             if (isPress2(gamepad1.right_bumper, previous7)){
                 if(Mecanum_Drive.Companion.getCapstone()){
                     odos.poseSet(new Pose2d(0.0,9.0,0.0));
                     Mecanum_Drive.Companion.setAutomateLock2(true);
                 }
             }
+
+             */
 
             //telemetry.addData("Zone: ", zone);
 
@@ -177,6 +180,7 @@ public class Teleop extends OpMode{
             drive.setPower(0.0, 0.0, 0.0);
             drive.write();
         }
+        telemetry.addData("Flip State: ", flipper.getBetterFlipState());
         telemetry.addData("Level:", elevator.getStack_count());
         telemetry.addData("Feeder: ", Vertical_Elevator.Companion.getDepositCheck());
 
@@ -203,6 +207,5 @@ public class Teleop extends OpMode{
 
         telemetry.addData("Slide Pos: ", elevator.getLiftHeight());
         telemetry.addData("Slide Error: ", elevator.getError());
-
     }
 }

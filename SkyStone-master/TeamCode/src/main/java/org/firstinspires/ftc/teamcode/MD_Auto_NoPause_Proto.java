@@ -28,7 +28,7 @@ import org.openftc.revextensions2.RevExtensions2;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_HEIGHT;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_WIDTH;
 
-@Autonomous(name = "COOL_KID_AUTO_PROTO", group = "Competition")
+@Autonomous(name = "Blue_4Stone_Auto", group = "Competition")
 //@Disabled
 public class MD_Auto_NoPause_Proto extends OpMode {
     int SkystonePos;

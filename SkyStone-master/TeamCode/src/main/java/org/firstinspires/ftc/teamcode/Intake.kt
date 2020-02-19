@@ -59,10 +59,17 @@ class Intake(hardwareMap: HardwareMap) {
     }
 
     fun kickout(){
-        open()
-        setPower(0.5)
-        write()
-        write()
+        //open()
+        motors[0].motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        motors[1].motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        //setPower(1.0)
+        open[0].setPosition(0.0)
+        open[1].setPosition(0.25)
+        motors[1].setPower(1.0)
+        motors[1].write()
+        //motors[0].setPower(1.0)
+        //write()
+        //write()
     }
 
     fun initIntake(){

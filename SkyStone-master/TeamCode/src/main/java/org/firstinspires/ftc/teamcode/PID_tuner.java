@@ -25,6 +25,7 @@ import org.firstinspires.ftc.teamcode.Pure_Pursuit.CurvePoint;
 import java.util.ArrayList;
 
 @Autonomous(name = "Pure Pursuit Tuner", group = "Odometry")
+@Disabled
 public class PID_tuner extends OpMode {
     ThreeWheelTrackingLocalizer odos;
     SRX_Three_Wheel_Localizer localizer;

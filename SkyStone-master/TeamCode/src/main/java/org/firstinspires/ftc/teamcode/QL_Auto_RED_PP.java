@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -15,6 +16,7 @@ import org.openftc.revextensions2.RevExtensions2;
 import java.util.ArrayList;
 
 @Autonomous(name = "QL_SkyStone_Red", group = "Competition")
+@Disabled
 public class QL_Auto_RED_PP extends OpMode {
     ElapsedTime mStateTime = new ElapsedTime();
     Mecanum_Drive drive;

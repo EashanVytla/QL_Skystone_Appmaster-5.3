@@ -111,6 +111,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         capClamp = Caching_Servo(h, "cclamp")
         capDeposit = Caching_Servo(h, "cdeposit")
         sensorDistance = h.get(DistanceSensor::class.java, "cds")
+        capClamp.setPosition(1.0)
     }
 
     fun write(){
@@ -130,8 +131,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         deposit.setPosition(DepositPos_IDOL)
         time.startTime()
         flipper.setPosition(flipperPos_IDOL)
-        capClamp.setPosition(0.5)
-        capDeposit.setPosition(0.0)
+        capClamp.setPosition(1.0)
         newState(flip_state.STATE_IDLE)
         write()
     }
@@ -143,7 +143,6 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         leftpm.setPosition(0.3)
         rightpm.setPosition(0.75)
         capClamp.setPosition(1.0)
-        capDeposit.setPosition(0.0)
         write()
     }
 
@@ -222,8 +221,8 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     }
 
     fun startKnocker(){
-        leftpm.setPosition(0.5)
-        rightpm.setPosition(0.45)
+        leftpm.setPosition(0.55)
+        rightpm.setPosition(0.4)
 
         write()
     }
@@ -258,9 +257,9 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     var previous11 = false
 
     fun operate(g1: Gamepad, g2 : Gamepad){
-        if(isPress(g2.b, previous2) /*|| isPress(g1.right_bumper, previous3)*/){
-            newState(flip_state.STATE_IDLE)
-        }
+        //if(isPress(g2.b, previous2) /*|| isPress(g1.right_bumper, previous3)*/){
+            //newState(flip_state.STATE_IDLE)
+        //}
         if(isPress(g1.a, previous)){
             if(grabbed){
                 resetPlatform()
@@ -297,7 +296,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         }
 
         if (isPress(g1.right_bumper, previous3) && !Vertical_Elevator.depositCheck){
-            newState(flip_state.STATE_DROP)
+            //newState(flip_state.STATE_DROP) YES KEEP THIS COMMENTED THIS IS VERY CRUCIAL!!!
         }
 
         if(isPress(g2.dpad_left, previouscap)){
@@ -450,9 +449,9 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
             newState(flip_state.STATE_FLIP)
         }
 
-        if(sequence == 5 && prev_sequence != 5){
-            newState(flip_state.STATE_CLEAR)
-        }
+        //if(sequence == 5 && prev_sequence != 5){
+          //  newState(flip_state.STATE_DROP)
+        //}
 
         prev_sequence = sequence
 

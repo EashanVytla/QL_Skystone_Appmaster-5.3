@@ -399,8 +399,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             fine_tune = 0.4
             fine_tune_rot = 0.3
         }else if(slow_mode3){
-            fine_tune = 0.45
-            fine_tune_rot = 0.3
+            fine_tune = 0.6  //0.45
+            fine_tune_rot = 0.45 //0.3
         } else{
             fine_tune = 1.0
             fine_tune_rot = 0.5

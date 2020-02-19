@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Odometry;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.localization.ThreeTrackingWheelLocalizer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -12,6 +13,7 @@ import org.openftc.revextensions2.RevBulkData;
 import org.openftc.revextensions2.RevExtensions2;
 
 @Autonomous(name = "Dead Wheel Calibration", group = "Odometry")
+@Disabled
 public class SRX_Dead_Wheel_Calibration extends OpMode {
     SRX_Three_Wheel_Localizer localizer;
     private ExpansionHubEx hub;
