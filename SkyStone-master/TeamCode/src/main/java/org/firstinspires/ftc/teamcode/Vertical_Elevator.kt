@@ -30,7 +30,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
     var time = ElapsedTime()
     var clicks = 0
 
-    var TargetPos = arrayOf(0, 593/2, 1071/2, 1459/2, 1890/2, 1216, 1405, 1646, 1880, 2095, 2330, 2567)
+    var TargetPos = arrayOf(0, 593/2, 1071/2, 1459/2, 1900/2, 1226, 1415, 1646, 1880, 2095, 2330, 2567)
 
     var fine_tune = 1.0
     var error = 0.0

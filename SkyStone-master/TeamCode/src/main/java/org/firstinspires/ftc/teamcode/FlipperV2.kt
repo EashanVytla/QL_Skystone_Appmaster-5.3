@@ -47,7 +47,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         var capped = false
         var rcase = 0
         const val case_right_turn_value = 0.88
-        const val case_left_turn_value = 0.125
+        const val case_left_turn_value = 0.1//0.125
         const val case_center_turn_value = 0.52
 
         const val handshake_flip_position = 0.4 //THIS IS GOING BACKWARDS 1 -> 0
@@ -111,7 +111,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         capClamp = Caching_Servo(h, "cclamp")
         capDeposit = Caching_Servo(h, "cdeposit")
         sensorDistance = h.get(DistanceSensor::class.java, "cds")
-        capClamp.setPosition(1.0)
+        capClamp.setPosition(0.0)
     }
 
     fun write(){
@@ -131,7 +131,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         deposit.setPosition(DepositPos_IDOL)
         time.startTime()
         flipper.setPosition(flipperPos_IDOL)
-        capClamp.setPosition(1.0)
+        //capClamp.setPosition(1.0)
         newState(flip_state.STATE_IDLE)
         write()
     }
@@ -142,7 +142,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         turn.setPosition(turnPos_IDOL)
         leftpm.setPosition(0.3)
         rightpm.setPosition(0.75)
-        capClamp.setPosition(1.0)
+        //capClamp.setPosition(1.0)
         write()
     }
 
@@ -228,7 +228,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     }
 
     fun partialDeposit(){
-        deposit.setPosition(0.95)
+        deposit.setPosition(0.85)
     }
 
     fun resetPlatform(){
@@ -301,10 +301,10 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
 
         if(isPress(g2.dpad_left, previouscap)){
             if(!capped){
-                capDeposit.setPosition(0.0)
+                capDeposit.setPosition(1.0)
                 capped = true
             }else{
-                capDeposit.setPosition(1.0)
+                capDeposit.setPosition(0.0)
                 capped = false
             }
         }
@@ -383,24 +383,31 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
             }
         }else if(betterFlipState == flip_state.STATE_REALLIGN){
             unclamp()
-            if(time.time() >= 0.1){
-                flipper.setPosition(handshake_flip_position)
-                //turn.setPosition(turnPos)
+            if(time.time() >= 0.5){ //0.5
+                flipper.setPosition(Flipper_Midway_REALLIGN)
             }
-            if (time.time() >= 0.2){
-                turn.setPosition(turnPos)
-            }
-            if(time.time() >= 0.8){
-                clamp()
-            }
-            if(time.time() >= 1.1){
-                deposit.setPosition(Deposit_Clearance_HANDSHAKE)
-                turnPos = turnPos_IDOL
-                flipper.setPosition(flipperPos_IDOL)
-                turn.setPosition(turnPos)
-                clamp()
+            if(time.time() >= 1.0){ //0.6
+                turn.setPosition(((turnPos-0.5)/2) + 0.5)
+                //flipper.setPosition(handshake_flip_position)
             }
             if(time.time() >= 1.8){
+                turn.setPosition(turnPos)
+                if(time.time() >= 1.9){
+                    flipper.setPosition(handshake_flip_position)
+                }
+            }
+            if(time.time() >= 2.5){
+                clamp()
+            }
+            if(time.time() >= 3.0){
+                deposit.setPosition(Deposit_Clearance_HANDSHAKE)
+                flipper.setPosition(0.5)
+            }
+            if(time.time() >= 3.5){
+                flipper.setPosition(0.7)
+            }
+
+            if(time.time() >= 3.5){
                 newState(flip_state.STATE_IDLE)
             }
         }
@@ -434,11 +441,13 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
             }
             if(getCase() == 2){
                 //Case Right
+                Flipper_Midway_REALLIGN = 0.7
                 turnPos = case_right_turn_value
                 newState(flip_state.STATE_REALLIGN)
             }
             if(getCase() == 1){
                 //Case Left
+                Flipper_Midway_REALLIGN = 0.75
                 turnPos = case_left_turn_value
                 newState(flip_state.STATE_REALLIGN)
             }

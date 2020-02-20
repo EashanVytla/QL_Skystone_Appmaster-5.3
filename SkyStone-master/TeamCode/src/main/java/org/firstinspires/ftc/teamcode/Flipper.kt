@@ -95,6 +95,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         capClamp = Caching_Servo(h, "cclamp")
         capDeposit = Caching_Servo(h, "cdeposit")
         sensorDistance = h.get(DistanceSensor::class.java, "cds")
+        capClamp.setPosition(0.0)
     }
 
     fun write(){
@@ -115,8 +116,6 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         deposit.setPosition(DepositPos_IDOL)
         time.startTime()
         flipper.setPosition(flipperPos_IDOL)
-        capClamp.setPosition(1.0)
-        capDeposit.setPosition(0.0)
         write()
     }
 
@@ -126,8 +125,6 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         turn.setPosition(turnPos_IDOL)
         leftpm.setPosition(0.3)
         rightpm.setPosition(0.75)
-        capClamp.setPosition(1.0)
-        capDeposit.setPosition(0.0)
         write()
     }
 
@@ -234,19 +231,6 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
             if(g2.b){
                 newState(flip_state.STATE_IDLE)
             }
-        /*
-            if(isPress(g1.y, prevknocker)){
-                if(knocker){
-                    resetPlatform()
-                    knocker = false
-                }else{
-                    startKnocker()
-                    knocker = true
-                }
-            }
-            prevknocker = g1.y
-
-         */
             if(isPress(g1.a, previous)){
                 if(grabbed){
                     resetPlatform()

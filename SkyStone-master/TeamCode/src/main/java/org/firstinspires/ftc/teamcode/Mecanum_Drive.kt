@@ -343,7 +343,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
 
          */
 
-        if (isPress2(gamepad2.b, previous6) || isPress2(gamepad.right_bumper, previous9)) {
+        if (isPress2(gamepad2.b, previous6) || isPress2(gamepad.right_bumper, previous7)) {
             slow_mode = false
         }
 
@@ -359,32 +359,6 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         if (!isInBounds(gamepad)){
             automateLock = false
         }
-        /*
-        if (isPress2(gamepad2.dpad_left, previous4) && !Flipper.capped){
-            automateLock = !automateLock
-            if (automateLock){
-                newState(State.STATE_STRAFE)
-            }
-            else{
-                newState(State.STATE_IDLE)
-            }
-        }
-
-         */
-
-        /*
-        if (isPress2(gamepad2.x, previous2)){
-            automateLock2 = !automateLock2
-            autoAllign(AutoAllignSt.STATE_TURN, gamepad)
-            if (automateLock2){
-                autoAllign(AutoAllignSt.STATE_STRAFE, gamepad)
-            }
-            else{
-                autoAllign(AutoAllignSt.STATE_IDLE, gamepad)
-            }
-        }
-
-         */
 
         previous2 = gamepad2.x
         previous3 = gamepad.left_bumper
