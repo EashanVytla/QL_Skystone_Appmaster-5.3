@@ -12,7 +12,7 @@ import org.openftc.revextensions2.RevExtensions2;
 import java.util.ArrayList;
 
 @Autonomous(name = "Track Width Tuner", group = "Proto")
-@Disabled
+//@Disabled
 public class Track_Width_Tuner extends OpMode {
     Mecanum_Drive drive;
     ThreeWheelTrackingLocalizer odos;
@@ -36,17 +36,22 @@ public class Track_Width_Tuner extends OpMode {
         drive.read(data);
         odos.update();
         odos.dataUpdate(data2);
-        /*
+
         if(drive.angleWrap(drive.angleWrap(drive.getExternalHeading())) <= Math.toRadians(270.0) && drive.angleWrap(drive.getExternalHeading()) >= Math.toRadians(90)){
             relativetrackwidth = odos.getEstimatedPose().getHeading()/drive.angleWrap(drive.getExternalHeading());
+            //relativetrackwidth = odos.getDiff()/drive.angleWrap(drive.getExternalHeading());
             exampleTrackWidths.add(relativetrackwidth);
         }
-         */
+
+        drive.setPower(0.0, 0.0, 0.3);
+
+        /*
         if(drive.angleWrap(drive.angleWrap(drive.getExternalHeading())) != 0.0) {
             relativetrackwidth = odos.getEstimatedPose().getHeading() / drive.angleWrap(drive.getExternalHeading());
             exampleTrackWidths.add(relativetrackwidth);
         }
-        drive.setPower(0.0,0.0,0.0);
+
+         */
         telemetry.addData("Raw Strafe: ", odos.getWheelPositions().get(2));
         telemetry.addData("Raw Forward1: ", odos.getWheelPositions().get(0));
         telemetry.addData("Raw Forward2: ", odos.getWheelPositions().get(1));

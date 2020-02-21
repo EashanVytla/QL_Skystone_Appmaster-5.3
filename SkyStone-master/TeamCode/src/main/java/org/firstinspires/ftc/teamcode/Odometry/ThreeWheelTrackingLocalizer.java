@@ -17,7 +17,7 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
     public static double WHEEL_RADIUS = 1.276; // in
     public static double GEAR_RATIO = 1; // output (wheel) speed / input (encoder) speed
 
-    public static double LATERAL_DISTANCE = 15.113085441402362; // in; distance between the left and right wheels
+    public static double LATERAL_DISTANCE = ((15.124330345985813 * 0.9997198402209) * 1.005566289330292) * 1.0021244715178834;//15.113085441402362; // in; distance between the left and right wheels
     public static double FORWARD_OFFSET = -4.875;// in; offset of the lateral wheel
 
     private DcMotor leftEncoder, rightEncoder, frontEncoder;
@@ -64,6 +64,10 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
     public double getAbsoluteAngle(){
         heading = angleWrap((encoderTicksToInches(positions[1]) - encoderTicksToInches(positions[0])) / LATERAL_DISTANCE + startheading);
         return heading;
+    }
+
+    public double getDiff(){
+        return (encoderTicksToInches(positions[1]) - encoderTicksToInches(positions[0]));
     }
 
     public void poseSet(Pose2d pos){

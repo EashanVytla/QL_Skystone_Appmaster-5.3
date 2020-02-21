@@ -223,6 +223,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         motors[0].motor.direction = DcMotorSimple.Direction.REVERSE
         motors[1].motor.direction = DcMotorSimple.Direction.REVERSE
 
+
         imu = LynxOptimizedI2cFactory.createLynxEmbeddedImu(hub.standardModule, 0)
         val parameters = BNO055IMU.Parameters()
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS
@@ -551,7 +552,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         motors.forEach {
             it.read(data)
         }
-        /*
+
         headingReadCount++
         if (headingAccessCount.toDouble() / headingReadCount.toDouble() < headingUpdateFrequency || true) {
             headingAccessCount++
@@ -559,7 +560,6 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             orientation = imu.angularOrientation
         }
         headingReadCount++
-         */
     }
 
     fun setPower(y : Double, x : Double, rightX : Double){

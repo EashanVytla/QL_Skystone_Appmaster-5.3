@@ -82,6 +82,7 @@ class Intake(hardwareMap: HardwareMap) {
     }
 
     fun open(){
+        setPower(0.0)
         open[0].setPosition(0.3)
         open[1].setPosition(0.7)
     }
@@ -112,7 +113,7 @@ class Intake(hardwareMap: HardwareMap) {
                 FlipperV2.rcase != 0 -> 3.0
                 else -> 2.0
             }
-            if (time.time() <= wait_time && !Vertical_Elevator.reset) {
+            if (time.time() <= wait_time) {
                 open()
             } else {
                 newState(clamp.IDOL)

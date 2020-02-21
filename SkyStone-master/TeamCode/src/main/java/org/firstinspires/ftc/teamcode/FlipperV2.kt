@@ -47,19 +47,24 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         var capped = false
         var rcase = 0
         const val case_right_turn_value = 0.88
-        const val case_left_turn_value = 0.1375//0.125
+        const val case_left_turn_value = 0.1425//0.1375//0.125
         const val case_center_turn_value = 0.52
 
         const val handshake_flip_position = 0.4 //THIS IS GOING BACKWARDS 1 -> 0
 
         const val turnPos_IDOL = 0.48 //0.4975 //0.4935
         const val flipperPos_IDOL = 0.975 //THIS IS GOING BACKWARDS 1 -> 0
+        const val flippersafety_IDOL = 0.875
         const val DepositPos_IDOL = 0.1//THIS IS GOING BACKWARDS 1 -> 0
 
         const val DepositPos = 0.975
         const val Deposit_Clearance_DROPPING_Block = 0.885
         const val Deposit_Clearance_HANDSHAKE = 0.17
         var knocker = false
+    }
+
+    fun flipsafety(){
+        flipper.setPosition(flippersafety_IDOL)
     }
 
     fun getKnocker() : Boolean{
@@ -111,7 +116,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         capClamp = Caching_Servo(h, "cclamp")
         capDeposit = Caching_Servo(h, "cdeposit")
         sensorDistance = h.get(DistanceSensor::class.java, "cds")
-        capClamp.setPosition(0.0)
+        capClamp.setPosition(0.5)
     }
 
     fun write(){
@@ -208,8 +213,8 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     }
 
     fun grabPlatform(){
-        leftpm.setPosition(0.37)//(0.35)
-        rightpm.setPosition(0.63)//(0.65)
+        leftpm.setPosition(0.35)
+        rightpm.setPosition(0.65)
 
         grabbed = true
 
@@ -228,7 +233,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     }
 
     fun partialDeposit(){
-        deposit.setPosition(0.85)
+        deposit.setPosition(0.9)
     }
 
     fun resetPlatform(){
