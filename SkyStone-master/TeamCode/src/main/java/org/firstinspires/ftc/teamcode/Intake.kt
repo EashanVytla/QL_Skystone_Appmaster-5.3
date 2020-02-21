@@ -109,10 +109,10 @@ class Intake(hardwareMap: HardwareMap) {
 
         if(clampst == clamp.OPEN){
             val wait_time = when{
-                Flipper.rcase != 0 -> 3.0
+                FlipperV2.rcase != 0 -> 3.0
                 else -> 2.0
             }
-            if (time.time() <= wait_time) {
+            if (time.time() <= wait_time && !Vertical_Elevator.reset) {
                 open()
             } else {
                 newState(clamp.IDOL)

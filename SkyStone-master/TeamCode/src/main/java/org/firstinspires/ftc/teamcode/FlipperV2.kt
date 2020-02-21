@@ -47,7 +47,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         var capped = false
         var rcase = 0
         const val case_right_turn_value = 0.88
-        const val case_left_turn_value = 0.1//0.125
+        const val case_left_turn_value = 0.1375//0.125
         const val case_center_turn_value = 0.52
 
         const val handshake_flip_position = 0.4 //THIS IS GOING BACKWARDS 1 -> 0
@@ -122,7 +122,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         leftpm.write()
         rightpm.write()
         capClamp.write()
-        capDeposit.write()
+        //capDeposit.write()
     }
 
     fun start(){
@@ -299,6 +299,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
             //newState(flip_state.STATE_DROP) YES KEEP THIS COMMENTED THIS IS VERY CRUCIAL!!!
         }
 
+        /*
         if(isPress(g2.dpad_left, previouscap)){
             if(!capped){
                 capDeposit.setPosition(1.0)
@@ -309,12 +310,14 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
             }
         }
 
+         */
+
         if (isPress(g2.a, previousA)){
             newState(flip_state.STATE_IDLE)
         }
 
         previousclamp = g2.dpad_right
-        previouscap = g2.dpad_left
+        //previouscap = g2.dpad_left
         previous = g1.a
         previous2 = g2.b
         previous3 = g1.right_bumper
@@ -322,23 +325,46 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         previousA = g2.a
 
         if(isPress(g2.left_bumper, previous11)){
-            if(getCase() == 0) {
-                //Case regular
-                turnPos = case_center_turn_value
-                newState(flip_state.STATE_FLIP)
+            if(Vertical_Elevator.stack_countStatic >= 2){
+                if(!Vertical_Elevator.reset){
+                    if(getCase() == 0) {
+                        //Case regular
+                        turnPos = case_center_turn_value
+                        newState(flip_state.STATE_FLIP)
+                    }
+                    if(getCase() == 2){
+                        //Case Right
+                        Flipper_Midway_REALLIGN = 0.7
+                        turnPos = case_right_turn_value
+                        newState(flip_state.STATE_REALLIGN)
+                    }
+                    if(getCase() == 1){
+                        //Case Left
+                        Flipper_Midway_REALLIGN = 0.75
+                        turnPos = case_left_turn_value
+                        newState(flip_state.STATE_REALLIGN)
+                    }
+                }
+            }else{
+                    if(getCase() == 0) {
+                        //Case regular
+                        turnPos = case_center_turn_value
+                        newState(flip_state.STATE_FLIP)
+                    }
+                    if(getCase() == 2){
+                        //Case Right
+                        Flipper_Midway_REALLIGN = 0.7
+                        turnPos = case_right_turn_value
+                        newState(flip_state.STATE_REALLIGN)
+                    }
+                    if(getCase() == 1){
+                        //Case Left
+                        Flipper_Midway_REALLIGN = 0.75
+                        turnPos = case_left_turn_value
+                        newState(flip_state.STATE_REALLIGN)
+                    }
             }
-            if(getCase() == 2){
-                //Case Right
-                Flipper_Midway_REALLIGN = 0.7
-                turnPos = case_right_turn_value
-                newState(flip_state.STATE_REALLIGN)
-            }
-            if(getCase() == 1){
-                //Case Left
-                Flipper_Midway_REALLIGN = 0.75
-                turnPos = case_left_turn_value
-                newState(flip_state.STATE_REALLIGN)
-            }
+
         }
         previous11 = g2.left_bumper
         if (betterFlipState == flip_state.STATE_FLIP){
@@ -382,41 +408,40 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
                 deposit.setPosition(Deposit_Clearance_DROPPING_Block)
             }
         }else if(betterFlipState == flip_state.STATE_REALLIGN){
-            unclamp()
-            if(time.time() >= 0.5){ //0.5
+
+            if(time.time() >= 0.25 && time.time() <= 0.55){ //0.5
                 flipper.setPosition(Flipper_Midway_REALLIGN)
             }
-            if(time.time() >= 1.0){ //0.6
+            if(time.time() >= 0.55 && time.time() <= 0.9){ //0.6
                 turn.setPosition(((turnPos-0.5)/2) + 0.5)
+                //turn.setPosition(turnPos)
                 //flipper.setPosition(handshake_flip_position)
             }
-            if(time.time() >= 1.8){
+            if(time.time() >= 0.9 && time.time() <= 1.25){
                 turn.setPosition(turnPos)
-                if(time.time() >= 1.9){
+                if(time.time() >= 1.1){
                     flipper.setPosition(handshake_flip_position)
                 }
             }
-            if(time.time() >= 2.5){
+            if(time.time() >= 1.5){
                 clamp()
+            }else{
+                unclamp()
             }
-            if(time.time() >= 3.0){
+            if(time.time() >= 1.85 && time.time() <= 2.25){
                 deposit.setPosition(Deposit_Clearance_HANDSHAKE)
                 flipper.setPosition(0.5)
             }
-            if(time.time() >= 3.5){
+            if(time.time() >= 2.25){
                 flipper.setPosition(0.7)
             }
 
-            if(time.time() >= 3.5){
+            if(time.time() >= 2.25){
                 newState(flip_state.STATE_IDLE)
             }
         }
 
         //telemetry.addData("flip State: ", betterFlipState)
-
-        if (capped){
-            capDeposit.setPosition(1.0);
-        }
 
         //t.addData("Deposit Position: ", deposit.servo.position)
         write()

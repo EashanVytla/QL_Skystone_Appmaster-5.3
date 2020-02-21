@@ -30,7 +30,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
     var time = ElapsedTime()
     var clicks = 0
 
-    var TargetPos = arrayOf(0, 593/2, 1071/2, 1459/2, 1900/2, 1226, 1415, 1646, 1880, 2095, 2330, 2567)
+    var TargetPos = arrayOf(0, 593/2, 1071/2, 1474/2, 1930/2, 1241, 1430, 1661, 1890, 2105, 2340, 2567)
 
     var fine_tune = 1.0
     var error = 0.0
@@ -58,11 +58,13 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
 
     val k = 0.000153908
     var stack_check = 0
-    var stack_count = 0
+    var stack_count = 1
 
     companion object{
         var depositCheck = false
         var increaseQueried = false
+        var reset = false
+        var stack_countStatic = 1
     }
 
     fun getDepositCheck() : Boolean{
@@ -181,7 +183,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
                 new_power += k * (getLiftHeight() - TargetPos[5])
             }
         }
-        if(mSlideState == slideState.STATE_IDLE){
+        if(mSlideState == slideState.STATE_IDLE || mSlideState == slideState.STATE_LEAVE_STACK){
             if(getLiftHeight() >= DROPDOWNPOS * 0.15){
                 if(getLiftHeight() >= DROPDOWNPOS && getLiftHeight() < TargetPos[4]){
                     new_power += gff
@@ -303,11 +305,12 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
 
     var b = false
     var previous3 = false
-    var reset = false
+
     var previous4 = false
     var check = false
 
     fun operate(g2 : Gamepad, g1 : Gamepad){
+        stack_countStatic = stack_count
         motors.map {
             it.motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         }
@@ -366,12 +369,15 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
                     if(mLeaveTime.time() >= 0.5){
                         newLeaveState(leaveState.STATE_RAISE)
                     }else{
+                        setPower(0.0)
                         flip.unclamp()
+                        flip.write()
                     }
                 }else if(mLeaveState == leaveState.STATE_RAISE){
-                    if(abs((savedPos + 570 / 2) - getLiftHeight()) >= 15.0 && mLeaveTime.time() < 1.0){
-                        PIDControllerPos(savedPos + 570)
+                    if(abs((savedPos + 520 / 2) - getLiftHeight()) >= 15.0 && mLeaveTime.time() < 1.0){
+                        PIDControllerPos(savedPos + 520)
                     }else{
+                        //stack_count += 2
                         savedPos += 2
                         setPower(0.0)
                         newLeaveState(leaveState.STATE_RETURN)
@@ -382,6 +388,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
                     }else{
                         setPower(0.0)
                         flip.operate(2)
+                        flip.write()
                     }
                     if (increaseQueried && stack_count < 11) {
                         increment_stack_count()

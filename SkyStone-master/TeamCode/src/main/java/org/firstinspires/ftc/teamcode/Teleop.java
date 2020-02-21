@@ -199,7 +199,7 @@ public class Teleop extends OpMode{
         flipper.operate(gamepad1, gamepad2);
         tape.operate(gamepad2);
         //telemetry.addData("DRIVETRAIN MODE", (mode ? "Field Centric" : "Robot Centric"));
-        telemetry.addData("DRIVETRAIN MODE", (drive.getMode() ? "Slow Mode" : "Regular Speed"));
+        //telemetry.addData("DRIVETRAIN MODE", (drive.getMode() ? "Slow Mode" : "Regular Speed"));
         //telemetry.addData("1mAngle: ", drive.getExternalHeading());
 
         //Vector2 v = new Vector2(gamepad1.left_stick_x, gamepad1.left_stick_y);

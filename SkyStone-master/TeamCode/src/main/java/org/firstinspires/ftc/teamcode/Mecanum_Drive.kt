@@ -328,8 +328,6 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
 
         if(isPress2(gamepad2.x, previous2)){
             slow_mode = true
-        }else if(isPress2(gamepad.a, previous5)){
-            slow_mode3 = !slow_mode3
         }
         /*
         if(isPress2(gamepad.b, previous10)){
@@ -360,6 +358,13 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             automateLock = false
         }
 
+        if(isPress2(gamepad.a, previous5)){
+            slow_mode3 = !slow_mode3
+            slow_mode = !slow_mode
+            slowmode2 = !slowmode2
+            slow_mode4 = !slow_mode4
+        }
+
         previous2 = gamepad2.x
         previous3 = gamepad.left_bumper
         previous4 = gamepad.y
@@ -369,12 +374,12 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         previous8 = gamepad2.dpad_left
         previous10 = gamepad.b
 
-        if (slow_mode || slowmode2 || slow_mode4){
+        if (slow_mode || slowmode2 || slow_mode4){ //Slides and everything else
             fine_tune = 0.4
             fine_tune_rot = 0.3
-        }else if(slow_mode3){
-            fine_tune = 0.6  //0.45
-            fine_tune_rot = 0.45 //0.3
+        }else if(slow_mode3){ //Foundation
+            fine_tune = 0.8  //0.45
+            fine_tune_rot = 0.65 //0.3
         } else{
             fine_tune = 1.0
             fine_tune_rot = 0.5
