@@ -5,6 +5,7 @@ import com.acmerobotics.roadrunner.localization.ThreeTrackingWheelLocalizer;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Universal.Math.Pose;
 import org.jetbrains.annotations.NotNull;
 import org.openftc.revextensions2.RevBulkData;
@@ -17,7 +18,8 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
     public static double WHEEL_RADIUS = 1.276; // in
     public static double GEAR_RATIO = 1; // output (wheel) speed / input (encoder) speed
 
-    public static double LATERAL_DISTANCE = ((15.124330345985813 * 0.9997198402209) * 1.005566289330292) * 1.0021244715178834;//15.113085441402362; // in; distance between the left and right wheels
+    public static double LATERAL_DISTANCE = (((((((15.12355037955128 * 0.9911335948014645) * 1.002848074334132) * 1.0095263624015305) * 0.9909948226880969) * 1.0089101563595695) * 0.9916553801386168) * 0.9977904723774983) * 1.00244898822434509;
+    //((15.124330345985813 * 0.9997198402209) * 1.005566289330292) * 1.0021244715178834;//15.113085441402362; // in; distance between the left and right wheels
     public static double FORWARD_OFFSET = -4.875;// in; offset of the lateral wheel
 
     private DcMotor leftEncoder, rightEncoder, frontEncoder;
@@ -53,6 +55,12 @@ public class ThreeWheelTrackingLocalizer extends ThreeTrackingWheelLocalizer {
         positions[0] = data.getMotorCurrentPosition(leftEncoder);
         positions[1] = data.getMotorCurrentPosition(rightEncoder);
         positions[2] = data.getMotorCurrentPosition(frontEncoder);
+    }
+
+    public void outputtRaw(Telemetry t){
+        t.addData("Raw left: ", leftEncoder.getCurrentPosition());
+        t.addData("Raw Right: ", rightEncoder.getCurrentPosition());
+        t.addData("Raw Strafe: ", frontEncoder.getCurrentPosition());
     }
 
     public void reset(){

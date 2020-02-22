@@ -30,8 +30,8 @@ import org.openftc.revextensions2.RevExtensions2;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_HEIGHT;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_WIDTH;
 
-@Autonomous(name = "Blue_4Stone_AutoREAL", group = "Competition")
-@Disabled
+@Autonomous(name = "BACKUP-Blue_4Stone_Auto-BACKUP", group = "Competition")
+//@Disabled
 public class BLUE_Four_Stone_Backup extends OpMode {
     int SkystonePos;
 

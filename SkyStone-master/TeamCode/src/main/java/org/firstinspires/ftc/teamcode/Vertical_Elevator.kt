@@ -30,7 +30,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
     var time = ElapsedTime()
     var clicks = 0
 
-    var TargetPos = arrayOf(0, 593/2, 1071/2, 1474/2, 1930/2, 1241, 1430, 1661, 1890, 2105, 2340, 2567)
+    var TargetPos = arrayOf(0, 593/2, 1071/2, 1484/2, 1940/2, 1251, 1430, 1661, 1890, 2105, 2340, 2567)
 
     var fine_tune = 1.0
     var error = 0.0
@@ -333,11 +333,9 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         if (g2.x){
             newState(slideState.STATE_RAISE)
         }else if(isPress2(g1.right_bumper, previous4)){
-            //if(depositCheck){
-                newState(slideState.STATE_LEAVE_STACK)
-            //}
+            b = false
+            newState(slideState.STATE_LEAVE_STACK)
             increaseQueried = true
-            //newState(slideState.STATE_LEAVE_STACK)
         }else if (isPress2(g2.b, previous3)){
             b = true
             if(stack_count < DOWN_AUTOMATION_THRESHOLD + 2){

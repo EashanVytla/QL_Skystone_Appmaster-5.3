@@ -151,7 +151,7 @@ public class Teleop extends OpMode{
             localizer.updateodos();
 
             if (isPress2(gamepad1.y, previous6)){
-                odos.poseSet(new Pose2d(0.0,0.0,0.0));
+                //odos.poseSet(new Pose2d(0.0,0.0,0.0));
             }
 
             /*
@@ -183,6 +183,7 @@ public class Teleop extends OpMode{
         telemetry.addData("Flip State: ", flipper.getBetterFlipState());
         telemetry.addData("Level:", elevator.getStack_count());
         telemetry.addData("Feeder: ", Vertical_Elevator.Companion.getDepositCheck());
+        odos.outputtRaw(telemetry);
 
         //telemetry.addData("current pos: ", drive.getCurrentPos().toString());
         telemetry.addData("Position: ", drive.getOdos().getEstimatedPose());

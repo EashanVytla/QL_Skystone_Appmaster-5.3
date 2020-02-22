@@ -200,7 +200,7 @@ public class BLUE_MD_Auto_NoPause_Proto extends OpMode {
         }else if(SkystonePos == 1){
             drive_to_block_target = new Pose2d(-24.000, 10, Math.PI/4);
 
-            return_target = new Pose2d(-20.569, -18.559, Math.PI/4);
+            return_target = new Pose2d(-20.569, -15.559, Math.PI/4);
             return_target2 = new Pose2d(-20.5, -31.906, Math.PI/4);
             //return_target2 = new Pose2d(-24.0, -27.880, Math.toRadians(35));//45
             return_target3 = new Pose2d(-43, 9.379, 0.0);
@@ -334,10 +334,13 @@ public class BLUE_MD_Auto_NoPause_Proto extends OpMode {
                         }
                     } else {
                         //intake.open();
+                        /*
                         if(delay.time() >= 0.3 && SkystonePos != 0){
                             flip.unclamp();
                             flip.flipflipper();
                         }
+
+                         */
 
                         if(delay.time() >= 0.1){
                             intake.setPower(0.0);
@@ -587,7 +590,7 @@ public class BLUE_MD_Auto_NoPause_Proto extends OpMode {
                         //slides.setStack_count(1);
                     }
                     else if (Math.abs(-78.972 - currentPos.getX()) <= 45){
-                        flip.flipDown();
+                        flip.flipsafety();
                     }
                     else if (Math.abs(-78.972 - currentPos.getX()) <= 50){
                         flip.clamp();

@@ -59,6 +59,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
 
         const val DepositPos = 0.975
         const val Deposit_Clearance_DROPPING_Block = 0.885
+        const val Deposit_Clearance_DROPPING_Block_CAP = 0.915
         const val Deposit_Clearance_HANDSHAKE = 0.17
         var knocker = false
     }
@@ -530,10 +531,18 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
             deposit.setPosition(DepositPos)
         }else if(betterFlipState == flip_state.STATE_DROP) {
             //unclamp()
-            clamp.setPosition(0.5)
-            if(time.time() >= 0.3){
-                deposit.setPosition(Deposit_Clearance_DROPPING_Block)
+            if(clamped){
+                clamp.setPosition(0.5)
+                if(time.time() >= 0.3){
+                    deposit.setPosition(Deposit_Clearance_DROPPING_Block)
+                }
+            }else{
+                clamp.setPosition(0.5)
+                if(time.time() >= 0.3){
+                    deposit.setPosition(Deposit_Clearance_DROPPING_Block_CAP)
+                }
             }
+
         }else if(betterFlipState == flip_state.STATE_REALLIGN){
             unclamp()
             if(time.time() >= 0.1){
