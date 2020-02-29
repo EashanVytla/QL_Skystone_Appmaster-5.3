@@ -34,7 +34,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     //var prevknocker = false
 
     val capClamp : Caching_Servo
-    val capDeposit : Caching_Servo
+    //val capDeposit : Caching_Servo
 
     var clamped = false
     var prev_sequence = -1
@@ -47,7 +47,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         var capped = false
         var rcase = 0
         const val case_right_turn_value = 0.88
-        const val case_left_turn_value = 0.1425//0.1375//0.125
+        const val case_left_turn_value = 0.15//.1425 //0.1375//0.125
         const val case_center_turn_value = 0.52
 
         const val handshake_flip_position = 0.4 //THIS IS GOING BACKWARDS 1 -> 0
@@ -83,7 +83,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     }
 
     fun unclamp(){
-        clamp.setPosition(0.625)  //0.725 with the regular rev servo
+        clamp.setPosition(0.525)  //0.725 with the regular rev servo
     }
 
     enum class flip_state{
@@ -115,9 +115,9 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         rightpm = Caching_Servo(h, "rightpm")
         leftpm = Caching_Servo(h, "leftpm")
         capClamp = Caching_Servo(h, "cclamp")
-        capDeposit = Caching_Servo(h, "cdeposit")
+        //capDeposit = Caching_Servo(h, "cdeposit")
         sensorDistance = h.get(DistanceSensor::class.java, "cds")
-        capClamp.setPosition(0.5)
+        capClamp.setPosition(0.4)
     }
 
     fun write(){
@@ -134,6 +134,16 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     fun start(){
         turn.setPosition(turnPos_IDOL)
         unclamp()
+        deposit.setPosition(DepositPos_IDOL)
+        time.startTime()
+        flipper.setPosition(flipperPos_IDOL)
+        //capClamp.setPosition(1.0)
+        newState(flip_state.STATE_IDLE)
+        write()
+    }
+
+    fun startAuto(){
+        turn.setPosition(turnPos_IDOL)
         deposit.setPosition(DepositPos_IDOL)
         time.startTime()
         flipper.setPosition(flipperPos_IDOL)
@@ -184,11 +194,13 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         } else if (dist >= 5.45 && dist <= 6.45) {
             //Case left
             //5.45 - 6
-            rcase = 1
+            //rcase = 1
+            rcase = 0
         } else if (dist >= 9.5 && dist <= 12.0) {
             //Case right
             //9.5 - 10.5
-            rcase = 2
+            //rcase = 2
+            rcase = 0
         }
         return rcase
     }
@@ -219,7 +231,8 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
 
         grabbed = true
 
-        write()
+        leftpm.write()
+        rightpm.write()
     }
 
     fun isGrabbed() : Boolean{
@@ -227,10 +240,11 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
     }
 
     fun startKnocker(){
-        leftpm.setPosition(0.55)
-        rightpm.setPosition(0.4)
+        leftpm.setPosition(0.52)
+        rightpm.setPosition(0.425)
 
-        write()
+        leftpm.write()
+        rightpm.write()
     }
 
     fun partialDeposit(){
@@ -242,7 +256,8 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
         rightpm.setPosition(0.0)
         grabbed = false
         knocker = false
-        write()
+        leftpm.write()
+        rightpm.write()
     }
 
     private fun isPress(clicked : Boolean, previous : Boolean) : Boolean{
@@ -296,7 +311,7 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
                 capClamp.setPosition(1.0)
                 clamped = true
             }else{
-                capClamp.setPosition(0.5)
+                capClamp.setPosition(0.4)
                 clamped = false
             }
         }
@@ -446,10 +461,6 @@ class FlipperV2(h : HardwareMap, telemetry : Telemetry){
                 newState(flip_state.STATE_IDLE)
             }
         }
-
-        //telemetry.addData("flip State: ", betterFlipState)
-
-        //t.addData("Deposit Position: ", deposit.servo.position)
         write()
     }
 

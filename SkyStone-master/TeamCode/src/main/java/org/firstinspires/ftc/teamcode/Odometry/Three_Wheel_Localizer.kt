@@ -7,17 +7,17 @@ import org.openftc.revextensions2.RevBulkData
 import kotlin.math.abs
 import kotlin.math.sin
 
-class Three_Wheel_Localizer(e0 : Dead_Wheel, e1 : Dead_Wheel, e2 : Dead_Wheel) {
-    var ex1 = e0
-    var ex2 = e1
-    var ey = e2
+class Three_Wheel_Localizer(e0 : SRX_Encoder, e1 : SRX_Encoder, e2 : SRX_Encoder) {
+    var ex1 = e0 //left
+    var ex2 = e1 //right
+    var ey = e2 //strafe
 
     var prev_x1_dist = 0.0
     var prev_x2_dist = 0.0
     var prev_y_dist = 0.0
 
-    val TRACK_WIDTH = 14.85006069
-    val STRAFE_WIDTH = 4.362
+    val TRACK_WIDTH = 15.865358653841296464280857043263
+    val STRAFE_WIDTH = -4.875 // in; offset of the lateral wheel //4.362
 
     var prev_heading = 0.0
     var prev_velo = 0.0
@@ -28,13 +28,15 @@ class Three_Wheel_Localizer(e0 : Dead_Wheel, e1 : Dead_Wheel, e2 : Dead_Wheel) {
 
     var pos = Pose2d(0.0, 0.0, 0.0)
 
-    init{
-        ex2.encoder.reverse()
-        ey.encoder.reverse()
-    }
+    var base_heading = 0.0
 
     fun angleWrap(angle : Double) : Double{
         return (angle + (2 * Math.PI)) % (2 * Math.PI)
+    }
+
+    fun setPosition(pos : Pose2d){
+        this.pos = pos
+        base_heading = pos.heading
     }
 
     fun update(data : RevBulkData, dt : Long) : Pose2d{
@@ -42,13 +44,14 @@ class Three_Wheel_Localizer(e0 : Dead_Wheel, e1 : Dead_Wheel, e2 : Dead_Wheel) {
         ex2.update(data)
         ey.update(data)
 
-        val x_offset = ((ex1.getDistance() - prev_x1_dist) + (ex2.getDistance() - prev_x2_dist)) / 2.0
-        val dTheta = ((ex1.getDistance() - prev_x1_dist) - (ex2.getDistance() - prev_x2_dist)) / (TRACK_WIDTH + (ex1.POC * WHEEL_VARIANCE) + (ex2.POC * WHEEL_VARIANCE))
-        val y_dist = (ey.getDistance() - prev_y_dist) - (dTheta * STRAFE_WIDTH)
+        val x_offset = ((ex1.getDist() - prev_x1_dist) + (ex2.getDist() - prev_x2_dist)) / 2.0
+        val dTheta = ((ex1.getDist() - prev_x1_dist) - (ex2.getDist() - prev_x2_dist)) / (TRACK_WIDTH)
+        val y_dist = (ey.getDist() - prev_y_dist) - (dTheta * STRAFE_WIDTH)
         val rc_offset = Vector2d(x_offset, y_dist)
         val accel = (2 * (dTheta - (prev_velo * dt))) / Math.pow(dt.toDouble(), 2.0)
         val offset : Vector2d
 
+        /*
         if (accel != 0.0) {
             offset = constantAccelOdometryUpdate(rc_offset, accel, dt).rotated(prev_heading)
             prev_velo += accel * dt
@@ -57,13 +60,23 @@ class Three_Wheel_Localizer(e0 : Dead_Wheel, e1 : Dead_Wheel, e2 : Dead_Wheel) {
             offset = constantVeloUpdate(rc_offset, dTheta).rotated(prev_heading)
         }
 
+         */
+
+        offset = constantVeloUpdate(rc_offset, dTheta).rotated(prev_heading)
+
         pos = pos.plus(Pose2d(offset, dTheta))
         prev_heading = heading
         heading = angleWrap(heading + dTheta)
-        prev_x1_dist = ex1.getDistance()
-        prev_x2_dist = ex2.getDistance()
-        prev_y_dist = ey.getDistance()
+        //heading = getAbsoluteAngle()
+        prev_x1_dist = ex1.getDist()
+        prev_x2_dist = ex2.getDist()
+        prev_y_dist = ey.getDist()
         return pos
+    }
+
+    fun getAbsoluteAngle(): Double {
+        heading = angleWrap((((ex2.getDist()) - (ex1.getDist())) / TRACK_WIDTH) + base_heading)
+        return heading
     }
 
     fun constantVeloUpdate(offset : Vector2d, w : Double): Vector2d{

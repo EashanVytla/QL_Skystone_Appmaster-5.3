@@ -31,7 +31,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
     var prevknocker = false
 
     val capClamp : Caching_Servo
-    val capDeposit : Caching_Servo
+    //val capDeposit : Caching_Servo
 
     var clamped = false
     var prev_sequence = -1
@@ -93,7 +93,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         rightpm = Caching_Servo(h, "rightpm")
         leftpm = Caching_Servo(h, "leftpm")
         capClamp = Caching_Servo(h, "cclamp")
-        capDeposit = Caching_Servo(h, "cdeposit")
+        //capDeposit = Caching_Servo(h, "cdeposit")
         sensorDistance = h.get(DistanceSensor::class.java, "cds")
         capClamp.setPosition(0.0)
     }
@@ -106,7 +106,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         leftpm.write()
         rightpm.write()
         capClamp.write()
-        capDeposit.write()
+        //capDeposit.write()
     }
 
     fun start(){
@@ -365,7 +365,7 @@ class Flipper(h : HardwareMap, telemetry: Telemetry){
         telemetry.addData("flip State: ", betterFlipState)
 
         if (capped){
-            capDeposit.setPosition(1.0);
+            //capDeposit.setPosition(1.0);
         }
 
         write()

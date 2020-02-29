@@ -61,8 +61,8 @@ class Intake(hardwareMap: HardwareMap) {
     fun kickout(){ //RED
         motors[0].motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         motors[1].motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        open[0].setPosition(0.0)
-        open[1].setPosition(0.25)
+        open[0].servo.position = 0.2
+        open[1].servo.position = 0.7
         motors[1].setPower(1.0)
         write()
     }
@@ -83,13 +83,13 @@ class Intake(hardwareMap: HardwareMap) {
 
     fun open(){
         setPower(0.0)
-        open[0].setPosition(0.3)
+        open[0].setPosition(0.2)
         open[1].setPosition(0.7)
     }
 
     fun close(){
-        open[0].setPosition(0.525) //0.7 //todo: LOWER TO INCREASE TIGHTNESS
-        open[1].setPosition(0.3) //0.25 //todo: HIGHER TO INCREASE TIGHTNESS
+        open[0].setPosition(0.4875) //0.7 //todo: LOWER TO INCREASE TIGHTNESS
+        open[1].setPosition(0.3375) //0.25 //todo: HIGHER TO INCREASE TIGHTNESS
     }
 
     fun newState(clampState: clamp){

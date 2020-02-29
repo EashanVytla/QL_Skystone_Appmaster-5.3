@@ -1,60 +1,58 @@
 package org.firstinspires.ftc.teamcode
 
-import com.qualcomm.robotcore.hardware.DcMotorSimple
-import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.hardware.Servo
-import org.openftc.revextensions2.RevBulkData
 
 class Grabber(hardwareMap: HardwareMap) {
-    var grabbers : Array<Caching_Servo>
-
-    var write_index = 0
+    var SClamp: Caching_Servo
+    var SArm: Caching_Servo
 
     init{
-        grabbers = arrayOf(Caching_Servo(hardwareMap, "grabber_1"), Caching_Servo(hardwareMap, "grabber_2"))
+        SClamp = Caching_Servo(hardwareMap, "sclamp")
+        SArm = Caching_Servo(hardwareMap, "sarm")
+        initialize()
     }
 
     fun write(){
-        grabbers[write_index].write()
-        write_index = (write_index + 1) % 2
+        SClamp.write()
+        SArm.write()
     }
 
-    fun clamp(pos: Double){
-        grabbers[0].setPosition(pos)
-        grabbers[1].setPosition(1-pos)
+    fun clamp(){
+        SClamp.setPosition(0.1) //Clamp
     }
 
     fun unclamp(){
-        grabbers[0].setPosition(0.5)
-        grabbers[1].setPosition(0.5)
+        SClamp.setPosition(0.325) //Unclamp
+    }
+
+    fun goDown(){
+        SArm.setPosition(0.415) //Down Position
+    }
+
+    fun goUp(){
+        SArm.setPosition(0.0) //All the way up
+    }
+
+    fun liftCrossing(){
+        SArm.setPosition(0.113)
+    }
+
+    fun partial(){
+        SArm.setPosition(0.3) //Partial
+    }
+
+    fun deposit(){
+        SArm.setPosition(0.157)
+    }
+
+    fun collapse(){
+        SClamp.setPosition(0.0)
     }
 
     fun initialize(){
-        grabbers[0].setPosition(0.0)
-        grabbers[1].setPosition(1.0)
+        SClamp.setPosition(0.1)
+        SArm.setPosition(0.0)
         write()
-        write()
-    }
-
-    //Soon this will go into automation and there will be no need for operation
-
-    fun operate(clamp_pos: Double, g:Gamepad){
-        var clickL = false
-        var clickR = false
-
-        if(g.right_bumper) {
-            clickR = true
-        }else if (g.left_bumper) {
-            clickL = true
-        }
-
-        if(clickR){
-            clamp(clamp_pos)
-        }else if (clickL){
-            unclamp()
-        }
-
         write()
     }
 }

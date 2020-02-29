@@ -9,6 +9,8 @@ import org.firstinspires.ftc.teamcode.Odometry.MA3_Encoder;
 import org.firstinspires.ftc.teamcode.Odometry.SRX_Encoder;
 import org.firstinspires.ftc.teamcode.Odometry.SRX_Three_Wheel_Localizer;
 import org.firstinspires.ftc.teamcode.Odometry.ThreeWheelTrackingLocalizer;
+import org.firstinspires.ftc.teamcode.Odometry.Three_Wheel_Localizer;
+import org.firstinspires.ftc.teamcode.Universal.Math.Pose;
 import org.firstinspires.ftc.teamcode.Universal.Math.Vector2;
 import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.RevBulkData;
@@ -26,15 +28,14 @@ public class Teleop extends OpMode{
 
     private ExpansionHubEx hub;
     private ExpansionHubEx hub2;
-    private boolean mode;
 
     private boolean previous = false;
+    private boolean previous10 = false;
 
-    Dead_Wheel leftWheel;
-    Dead_Wheel rightWheel;
-    Dead_Wheel strafeWheel;
+    private Grabber grabber;
 
-    Double prevStrafe = 0.0;
+    public Three_Wheel_Localizer twl;
+
     Tape_Extention tape;
     SRX_Three_Wheel_Localizer localizer;
     ThreeWheelTrackingLocalizer odos;
@@ -42,8 +43,6 @@ public class Teleop extends OpMode{
     boolean previous6 = false;
     boolean previous7 = false;
     boolean previous8 = false;
-    boolean previous9 = false;
-    boolean previous10 = false;
 
     //ZONE 1 BOUNDS
     final double ZONE1_RIGHTBOUNDS = 0.0;
@@ -60,7 +59,6 @@ public class Teleop extends OpMode{
     final double ZONE2_LEFTBOUNDS = 0.0;
     final double ZONE2_UPPERBOUNDS = 0.0;
 
-    Pose2d stored_pos = new Pose2d(0.0,0.0,0.0);
     Pose2d pos = new Pose2d(0.0,0.0,0.0);
 
     public void init(){
@@ -71,9 +69,11 @@ public class Teleop extends OpMode{
         drive = new Mecanum_Drive(hardwareMap, telemetry);
         elevator = new Vertical_Elevator(hardwareMap, telemetry);
         intake = new Intake(hardwareMap);
+        grabber = new Grabber(hardwareMap);
         //grabber = new GrabberV2(hardwareMap);
         flipper = new FlipperV2(hardwareMap, telemetry);
         tape = new Tape_Extention(hardwareMap);
+        twl = new Three_Wheel_Localizer(new SRX_Encoder("intake_left", hardwareMap), new SRX_Encoder("intake_right", hardwareMap), new SRX_Encoder("lift_2", hardwareMap));
 
         //grabber.initialize();
         //flipper.initialize();
@@ -98,6 +98,10 @@ public class Teleop extends OpMode{
     @Override public void start(){
         flipper.start();
         intake.start();
+        grabber.liftCrossing();
+        grabber.collapse();
+        grabber.write();
+        grabber.write();
     }
 
     public boolean isPress(boolean value){
@@ -118,7 +122,7 @@ public class Teleop extends OpMode{
     public void loop() {
         long dt = System.currentTimeMillis() - prev_time;
         if (dt != 0.0){
-            //telemetry.addData("Refresh Rate: ", 1000 / dt);
+            telemetry.addData("Refresh Rate: ", dt);
         }
         //telemetry.addData("Dt: ", dt);
         prev_time = System.currentTimeMillis();
@@ -130,12 +134,14 @@ public class Teleop extends OpMode{
             odos.update();
         }
 
-        Pose2d currentPos = new Pose2d(odos.getEstimatedPose().getX(), odos.getEstimatedPose().getY(), heading);
+
+        Pose2d currentPos = new Pose2d(odos.getEstimatedPose().vec(), heading);
+        Pose2d currentPosTWL = twl.update(data, dt);
 
         if (currentPos.getHeading() <= Math.PI) {
-            heading = currentPos.getHeading();
+            heading = odos.getAbsoluteAngle();
         } else {
-            heading = -((2 * Math.PI) - currentPos.getHeading());
+            heading = -((2 * Math.PI) - odos.getAbsoluteAngle());
         }
 
         if (gamepad1 != null && gamepad2 != null) {
@@ -148,18 +154,20 @@ public class Teleop extends OpMode{
             } else if (odos.getEstimatedPose().getY() >= ZONE2_LEFTBOUNDS && odos.getEstimatedPose().getY() <= ZONE2_RIGHTBOUNDS && odos.getEstimatedPose().getX() > ZONE2_UPPERBOUNDS) {
                 zone = 2;
             }
-            localizer.updateodos();
+            localizer.update();
 
             if (isPress2(gamepad1.y, previous6)){
-                //odos.poseSet(new Pose2d(0.0,0.0,0.0));
+                odos.poseSet(new Pose2d(0.0,0.0,0.0));
+                drive.getOdos().poseSet(new Pose2d(0.0,0.0,0.0));
+                drive.setCurrentPos(new Pose2d(0.0,0.0,0.0));
             }
 
-            /*
             if(isPress2(gamepad1.right_bumper, previous10)){
                 odos.poseSet(new Pose2d(0.0,0.0,0.0));
+                drive.getOdos().poseSet(new Pose2d(0.0,0.0,0.0));
+                drive.setCurrentPos(new Pose2d(0.0,0.0,0.0));
             }
             previous10 = gamepad1.right_bumper;
-             */
 
             /*
             if (isPress2(gamepad1.right_bumper, previous7)){
@@ -183,6 +191,8 @@ public class Teleop extends OpMode{
         telemetry.addData("Flip State: ", flipper.getBetterFlipState());
         telemetry.addData("Level:", elevator.getStack_count());
         telemetry.addData("Feeder: ", Vertical_Elevator.Companion.getDepositCheck());
+        //telemetry.addData("currentPosTWL: ", currentPosTWL.toString());
+
         odos.outputtRaw(telemetry);
 
         //telemetry.addData("current pos: ", drive.getCurrentPos().toString());
@@ -199,6 +209,9 @@ public class Teleop extends OpMode{
         //grabber.operate(gamepad2);
         flipper.operate(gamepad1, gamepad2);
         tape.operate(gamepad2);
+
+        //flipper.write();
+        //elevator.write();
         //telemetry.addData("DRIVETRAIN MODE", (mode ? "Field Centric" : "Robot Centric"));
         //telemetry.addData("DRIVETRAIN MODE", (drive.getMode() ? "Slow Mode" : "Regular Speed"));
         //telemetry.addData("1mAngle: ", drive.getExternalHeading());

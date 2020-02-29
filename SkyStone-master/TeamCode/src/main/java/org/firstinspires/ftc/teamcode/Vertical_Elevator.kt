@@ -22,7 +22,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
 
     var telemetry = t
     var isDropped = false
-    var touch = map.get(DigitalChannel::class.java, "touch")
+    //var touch = map.get(DigitalChannel::class.java, "touch")
     val DROPDOWNPOS = 175
 
     var zero = 0.0
@@ -53,10 +53,10 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
 
     val speed = 1.0
 
-    val kp = 0.005 * speed
-    val kd = 0.001 * speed
+    val kp = 0.002 * speed
+    val kd = 0.000 * speed
 
-    val k = 0.000153908
+    val k = 0.000103908
     var stack_check = 0
     var stack_count = 1
 
@@ -101,7 +101,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
 
     init{
         motors = arrayOf(Caching_Motor(map, "lift_1"), Caching_Motor(map, "lift_2"))
-        touch.mode = DigitalChannel.Mode.INPUT
+        //touch.mode = DigitalChannel.Mode.INPUT
         //motors[1].motor.direction = DcMotorSimple.Direction.REVERSE
         motors.map{
             it.motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -165,7 +165,7 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
 
     fun read(data : RevBulkData){
         motors[0].read(data)
-        isDropped = !data.getDigitalInputState(touch)
+        //isDropped = !data.getDigitalInputState(touch)
     }
 
     fun write(){
@@ -178,12 +178,12 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
             it.motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         }
         var new_power = power
-        if (power >= 0.0){
+        if (power >= 0.0 || mSlideState == slideState.STATE_RAISE){
             if (getLiftHeight() > TargetPos[5] + 50){
                 new_power += k * (getLiftHeight() - TargetPos[5])
             }
         }
-        if(mSlideState == slideState.STATE_IDLE || mSlideState == slideState.STATE_LEAVE_STACK){
+        if(mSlideState == slideState.STATE_RAISE || mSlideState == slideState.STATE_LEAVE_STACK){
             if(getLiftHeight() >= DROPDOWNPOS * 0.15){
                 if(getLiftHeight() >= DROPDOWNPOS && getLiftHeight() < TargetPos[4]){
                     new_power += gff
@@ -197,6 +197,23 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
                     }
                 }
             }
+        }
+        if(mSlideState == slideState.STATE_IDLE){
+            motors.map{
+                it.motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+            }
+
+            if(getLiftHeight() >= DROPDOWNPOS * 0.15){
+                if(getLiftHeight() <= 1100){
+                    new_power = power + (gff)
+                }else{
+                    new_power = power + (gff + 0.1)
+                }
+            }else{
+                new_power = power
+            }
+
+            telemetry.addData("Speed Set", power)
         }
 
         motors[0].setPower(Range.clip(-new_power, -1.0, 1.0))
@@ -412,7 +429,9 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
         }else if (mSlideState == slideState.STATE_RAISE) {
             PIDController(stack_count)
             if(stack_count <= 4){
-                flip.operate(0)
+                if (abs(TargetPos[stack_count] - getLiftHeight()) < 550) {
+                    flip.operate(0)
+                }
                 /*
                 if (abs(TargetPos[stack_count] - getLiftHeight()) < 102.6 / 2) {
                     flip.operate(0)
@@ -451,11 +470,21 @@ class Vertical_Elevator(map : HardwareMap, t : Telemetry){
             }
         }
         else if (mSlideState == slideState.STATE_IDLE){
+            /*
             if(g2.right_stick_y < 0){
                 setPower(-0.35 * g2.right_stick_y) //UP
             }else{
                 setPower(-0.15 * g2.right_stick_y) //DOWN
             }
+
+             */
+
+            if(g2.right_stick_y < 0){
+                setPower(-0.5 * g2.right_stick_y) //Up
+            }else{
+                setPower(-0.15 * g2.right_stick_y) //Down
+            }
+
         }else if (mSlideState == slideState.STATE_CAPSTONE){
             if(stack_count > 1) {
                 PIDControllerPos(TargetPos[stack_count - 2] + (Math.abs(TargetPos[stack_count - 1] - TargetPos[stack_count - 2]) / 2).toDouble())

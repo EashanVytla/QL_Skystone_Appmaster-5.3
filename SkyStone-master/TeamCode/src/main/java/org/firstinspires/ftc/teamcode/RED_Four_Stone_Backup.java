@@ -6,6 +6,7 @@ import com.acmerobotics.roadrunner.localization.ThreeTrackingWheelLocalizer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -130,7 +131,7 @@ public class RED_Four_Stone_Backup extends OpMode {
         newState(State.STATE_DRIVE_TO_BLOCK);
     }
 
-    Pose2d cross_target = new Pose2d(-23.172, -91.387, -Math.PI/2);
+    Pose2d cross_target = new Pose2d(-21.172, -91.387, -Math.PI/2);
     Pose2d return_target;
     Pose2d intake1;
     Pose2d intake2;
@@ -177,29 +178,29 @@ public class RED_Four_Stone_Backup extends OpMode {
         if(SkystonePos == 0){
             drive_to_block_target = new Pose2d(-23.068, 14.899, Math.PI/4);//toRadians(28.105)
 
-            return_target = new Pose2d(-28.569, -15.559, Math.PI/4);
-            return_target2 = new Pose2d(-30, -30.559, Math.PI/4);
+            return_target = new Pose2d(-22.569, -14.559, Math.PI/4);
+            return_target2 = new Pose2d(-30, -31.559, Math.PI/4);
             return_target3 = new Pose2d(-49.469, 3.063, Math.PI/4);
             //22.626
             exit_pool = new Pose2d(-18.020, 16.496, Math.PI/4);
-            exit_pool2 = new Pose2d(-40.020, -10.496, Math.PI/4);
+            exit_pool2 = new Pose2d(-30.020, -10.496, Math.PI/4);
             exit_pool3 = new Pose2d(-40.020, -15.496, Math.PI/4);
             exit_pool4 = new Pose2d(-33.806, 0.429,Math.PI/4);
 
-            intake1 = new Pose2d(-45.843, 19.816, Math.PI/4);
-            intake2 = new Pose2d(-50.689, 7.893, Math.PI/4);
-            intake3 = new Pose2d(-56.689, -6.893, Math.PI/4); //Send to state Stop and find the positions
+            intake1 = new Pose2d(-45.843, 17.816, Math.PI/4);
+            intake2 = new Pose2d(-50.689, 6.893, Math.PI/4);
+            intake3 = new Pose2d(-66.689, 4.893, Math.PI/4); //Send to state Stop and find the positions
             intake4 = new Pose2d(-66.702, 13.165, Math.PI/4); //Send to state Stop and find the positions
         }else if(SkystonePos == 1){
-            drive_to_block_target = new Pose2d(-25.000, 1, Math.PI/4);
+            drive_to_block_target = new Pose2d(-26.000, 1, Math.PI/4);
 
-            return_target = new Pose2d(-27.569, -22.559, Math.PI/4);
+            return_target = new Pose2d(-23.569, -22.559, Math.PI/4);
             return_target2 = new Pose2d(-26.5, -31.906, Math.PI/4);
             return_target3 = new Pose2d(-50, 9.379, 0.0);
             //22.626
             exit_pool = new Pose2d(-20.020, 8.496, Math.PI/4);
-            exit_pool2 = new Pose2d(-28.020, -18.496, Math.PI/4);
-            exit_pool3 = new Pose2d(-33.075, -15.546,Math.PI/4);
+            exit_pool2 = new Pose2d(-23.020, -18.496, Math.PI/4);
+            exit_pool3 = new Pose2d(-38.075, -6.546,Math.PI/4);
             exit_pool4 = new Pose2d(-25.023, -0.22,0.0);
 
             intake1 = new Pose2d(-51.435, 10.8, Math.PI/4);
@@ -207,10 +208,10 @@ public class RED_Four_Stone_Backup extends OpMode {
             intake3 = new Pose2d(-70, 7.870, Math.toRadians(50)); //pi/4
             intake4 = new Pose2d(-50, 20, 0.0); //Send to state Stop and find the positions
         }else if(SkystonePos == 2){
-            drive_to_block_target = new Pose2d(-29.797, -8, Math.PI/4);
+            drive_to_block_target = new Pose2d(-28.797, -9, Math.PI/4);
 
-            return_target = new Pose2d(-28.569, -31.559, Math.PI/4);
-            return_target2 = new Pose2d(-54, -2, 0.0);
+            return_target = new Pose2d(-22.569, -31.559, Math.PI/4);
+            return_target2 = new Pose2d(-55, -2, 0.0);
             return_target3 = new Pose2d(-51, 9, 0.0);
             //22.626
             exit_pool = new Pose2d(-20.020, 8.496, Math.PI/4);
@@ -218,35 +219,51 @@ public class RED_Four_Stone_Backup extends OpMode {
             //exit_pool2 = new Pose2d( -5.0,-15, Math.PI/4);    //This is +5
             //exit_pool3_real = new Pose2d(-15.000, -2.5,0.0);
             //exit_pool3 = new Pose2d( -5.0,-7, 0.0); //This is +5
-            exit_pool2 = new Pose2d(-34.020, -15.496, Math.PI/4);
-            exit_pool3 = new Pose2d(-20.000, -7.5,0.0);
+            exit_pool2 = new Pose2d(-28.020, -15.496, Math.PI/4);
+            exit_pool3 = new Pose2d(-40.000, -0.5,0.0);
             exit_pool4 = new Pose2d(-25.822, -3.5,0.0);
 
             intake1 = new Pose2d(-45.435, 4.8, Math.PI/4);
             intake2 = new Pose2d(-60.689, -20.893, Math.PI/4);
-            intake3 = new Pose2d(-54, 15, 0.0);
+            intake3 = new Pose2d(-55, 21, 0.0);
             intake4 = new Pose2d(-51, 26, 0.0);
         }
 
         switch (mRobotState) {
             case STATE_DRIVE_TO_BLOCK:
-                if(Math.abs(drive_to_block_target.getX() + currentPos.getY()) <= 2.0 && Math.abs(drive_to_block_target.getHeading() - currentPos.getHeading()) <= 2.0 && (Math.abs(drive_to_block_target.getX()) - Math.abs(currentPos.getY())) <= 2.0) {
-                    drive.setPower(0.0,0.0,0.0);
-                    newState(State.STATE_INTAKE);
+                if(delay.time() >= 2.0){
+                    if(Math.abs(drive_to_block_target.getX() + currentPos.getY()) <= 2.0 && Math.abs(drive_to_block_target.getHeading() - currentPos.getHeading()) <= 2.0 && (Math.abs(drive_to_block_target.getX()) - Math.abs(currentPos.getY())) <= 2.0) {
+                        drive.setPower(0.0,0.0,0.0);
+                        newState(State.STATE_INTAKE);
+                    }else{
+                        //flip.start();
+                        if(SkystonePos == 0){
+                            localizer.GoTo(drive_to_block_target, 1.0, 1.0, 0.8);
+                        }else{
+                            localizer.GoTo(drive_to_block_target, 1.0, 1.0, 1.0);
+                        }
+                        //mStateTime.reset();
+                        //intake.kickout();
+                    }
+                    if (delay.time() >= 1.5){
+                        intake.close();
+                    }
+                    flip.read();
                 }else{
                     flip.start();
-                    if(SkystonePos == 0){
-                        localizer.GoTo(drive_to_block_target, 1.0, 1.0, 0.8);
-                    }else{
-                        localizer.GoTo(drive_to_block_target, 1.0, 1.0, 1.0);
+                    if (delay.time() >= 1.0){
+                        intake.setPower(0.0);
                     }
-                    mStateTime.reset();
-                    intake.kickout();
+                    else if(delay.time() >= 0.75){
+                        intake.kickout();
+                    }else{
+                        //intake.setPower(0.0);
+                        intake.open();
+                    }
+
+                    //intake.open();
                 }
-                if (delay.time() >= 1.0){
-                    intake.close();
-                }
-                flip.read();
+
                 break;
             case STATE_INTAKE:
                 if(Math.abs(intake1.getX() + currentPos.getY()) <= 1.5 || flip.IntakeFeedback()){
@@ -260,7 +277,7 @@ public class RED_Four_Stone_Backup extends OpMode {
                 }else{
                     intake.close();
                     if(SkystonePos == 0){
-                        localizer.GoTo(intake1, 0.3, 0.3, 0.3);
+                        localizer.GoTo(intake1, 0.2, 0.2, 0.2);
                     }else{
                         localizer.GoTo(intake1, 0.2, 0.2, 0.2);
                     }
@@ -276,19 +293,38 @@ public class RED_Four_Stone_Backup extends OpMode {
                 }
                 break;
             case STATE_HANDSHAKE:
-                if(delay.time() >= 0.5){
-                    localizer.getDrive().setPower(0.0,0.0,0.0);
-                    localizer.getDrive().write();
-                    drive.setPower(0.0,0.0,0.0);
-                    newState(State.STATE_EXIT_POOL);
+                if(SkystonePos == 0){
+                    if(delay.time() >= 2.0){
+                        localizer.getDrive().setPower(0.0,0.0,0.0);
+                        localizer.getDrive().write();
+                        drive.setPower(0.0,0.0,0.0);
+                        if(SkystonePos == 0){
+                            newState(State.STATE_CROSS);
+                        }else{
+                            newState(State.STATE_EXIT_POOL);
+                        }
+                    }else{
+                        localizer.getDrive().setPower(0.0,0.0,0.0);
+                        localizer.getDrive().write();
+                        intake.open();
+                        intake.setPower(0.0);
+                        flip.operate(4);
+                    }
                 }else{
-                    localizer.getDrive().setPower(0.0,0.0,0.0);
-                    localizer.getDrive().write();
-                    intake.open();
-                    intake.setPower(0.0);
-                    if(delay.time() >= 0.3){
-                        flip.unclamp();
-                        flip.flipflipper();
+                    if(delay.time() >= 0.5){
+                        localizer.getDrive().setPower(0.0,0.0,0.0);
+                        localizer.getDrive().write();
+                        drive.setPower(0.0,0.0,0.0);
+                        newState(State.STATE_EXIT_POOL);
+                    }else{
+                        localizer.getDrive().setPower(0.0,0.0,0.0);
+                        localizer.getDrive().write();
+                        intake.open();
+                        intake.setPower(0.0);
+                        if(delay.time() >= 0.3){
+                            flip.unclamp();
+                            flip.flipflipper();
+                        }
                     }
                 }
                 break;
@@ -297,13 +333,22 @@ public class RED_Four_Stone_Backup extends OpMode {
                     if (Math.abs(exit_pool.getX() + currentPos.getY()) <= 4.0 || delay.time() >= 3.0) {
                         intake.setPower(0.0);
                         //flip.clamp();
-                        newState(State.STATE_CROSS);
+                        if(SkystonePos == 0){
+                            newState(State.STATE_HANDSHAKE);
+                        }else{
+                            newState(State.STATE_CROSS);
+                        }
                     }else {
-                        intake.open();
+                        if(SkystonePos != 0){
+                            intake.open();
+                        }
+                        /*
                         if(delay.time() >= 0.3){
                             flip.unclamp();
                             flip.flipflipper();
                         }
+
+                         */
 
                         if(delay.time() >= 0.1){
                             intake.setPower(0.0);
@@ -363,11 +408,9 @@ public class RED_Four_Stone_Backup extends OpMode {
                         flip.clamp();
                     }
                 }
-
-                telemetry.addData("Is Grabbed? ", flip.isGrabbed());
                 break;
             case STATE_DRIVE_TO_FOUNDATION:
-                if(mStateTime.time() >= 0.5) {
+                if(Math.abs(Math.abs(currentPos.getY()) - 33.885) <= 6.0) {
                     localizer.getDrive().setPower(0.0,0.0,0.0);
                     localizer.getDrive().write();
                     newState(State.STATE_GRAB_FOUNDATION);
@@ -377,7 +420,7 @@ public class RED_Four_Stone_Backup extends OpMode {
                     intake.open();
                     flip.flipDown();
                     //flip.clamp();
-                    localizer.GoTo(new Pose2d(-35.885, -92.7, -Math.PI/2), 1.0, 1.0, 1.0);
+                    localizer.GoTo(new Pose2d(-33.885, cross_target.getY(), -Math.PI/2), 0.3, 0.3, 1.0);
                 }
                 break;
             case STATE_GRAB_FOUNDATION:
@@ -391,7 +434,7 @@ public class RED_Four_Stone_Backup extends OpMode {
                 }
                 break;
             case STATE_PULL_FORWARD:
-                if(Math.abs(-12 + currentPos.getY()) <= 4.0) {
+                if(Math.abs(-8 + currentPos.getY()) <= 4.0) {
                     drive.setPower(0.0,0.0,0.0);
                     newState(State.STATE_TURN);
                 }else if(mStateTime.time() >= 3.0){
@@ -399,7 +442,7 @@ public class RED_Four_Stone_Backup extends OpMode {
                     newState(State.STATE_TURN);
                 }else{
                     intake.setPower(-0.2);
-                    localizer.GoTo(new Pose2d(-12, -90, -Math.PI/2), 1.0, 1.0, 1.0);
+                    localizer.GoTo(new Pose2d(-8, cross_target.getY() + 10, -Math.toRadians(65)), 1.0, 1.0, 1.0);
                     mStateTime.reset();
                 }
                 break;
@@ -408,34 +451,28 @@ public class RED_Four_Stone_Backup extends OpMode {
                     localizer.getDrive().setPower(0.0,0.0,0.0);
                     localizer.getDrive().write();
                     drive.setPower(0.0, 0.0, 0.0);
-                    newState(State.STATE_RETURN);
+                    flip.resetPlatform();
+                    newState(State.STATE_STRAFE);
                 }else{
                     //localizer.GoTo(new Pose2d(-8.783, -70.605, (Math.PI / 2) + Math.toRadians()), 1.0, 1.0, 1.0);
                     localizer.getDrive().setPower(0.0,0.0,-1.0);
                     localizer.getDrive().write();
                     //localizer.GoTo(new Pose2d(-8.783, -70.605, 0.0), 1.0, 1.0, 1.0);
                     //flip.operate(2);
-                    if (Math.abs(getHeading()) < Math.toRadians(25)){
-                        flip.operate(1);
-                    }
+                    //if (Math.abs(getHeading()) < Math.toRadians(25)){
+                    //    flip.operate(1);
+                    //}
                 }
                 break;
-            case STATE_RETURN:
-                if(Math.abs(return_target.getY() - currentPos.getX()) <= 5.0 && Math.abs(return_target.getHeading() - currentPos.getHeading()) <= 3.0) {
-                    //localizer.getDrive().setPower(0.0,0.0,0.0);
-                    //localizer.getDrive().write();
-                    memo = localizer.getForwardDist();
-                    newState(State.STATE_INTAKE2);
-                }else{
-                    flip.resetPlatform();
+            case STATE_STRAFE:
+                if(delay.time() >= 1.0){
                     intake.close();
-                    if((currentPos.getY() >= 16.569)){
-                        if (currentPos.getX() >= (return_target.getY() - 5)) {
-                            localizer.GoTo(return_target, 1.0, 1.0, 1.0);
-                        }else {
-                            localizer.GoTo(new Pose2d(return_target.getX(), return_target.getY(), 0.0), 1.0, 1.0, 1.0);
-                        }
+                    if((currentPos.getY() >= 17.569)){
+                        newState(State.STATE_RETURN);
                     }else{
+                        if(delay.time() >= 1.1){
+                            flip.getClamp().setPosition(0.7125);
+                        }
                         localizer.GoTo(new Pose2d(-40, -70, 0.0), 1.0, 1.0, 1.0);
                     }
 
@@ -446,7 +483,38 @@ public class RED_Four_Stone_Backup extends OpMode {
                         intake.setPower(-1.0);
                     }
                     mStateTime.reset();
+                }else{
+                    localizer.getDrive().setPower(0.0,0.0,0.0);
+                    localizer.getDrive().write();
+                    drive.setPower(0.0, 0.0, 0.0);
+                    if (delay.time() >= 0.5) {
+                        flip.operate(1);
+                    }
                 }
+
+                break;
+            case STATE_RETURN:
+                    if(Math.abs(return_target.getY() - currentPos.getX()) <= 5.0 && Math.abs(return_target.getHeading() - currentPos.getHeading()) <= 3.0) {
+                        //localizer.getDrive().setPower(0.0,0.0,0.0);
+                        //localizer.getDrive().write();
+                        newState(State.STATE_INTAKE2);
+                    }else{
+                        intake.close();
+                            if (currentPos.getX() >= (return_target.getY() - 5)) {
+                                localizer.GoTo(return_target, 1.0, 1.0, 1.0);
+                            }else {
+                                localizer.GoTo(new Pose2d(return_target.getX(), return_target.getY(), 0.0), 1.0, 1.0, 1.0);
+                            }
+
+                        if(currentPos.getX() >= return_target.getY()/3){
+                            //intake.close();
+                            intake.setPower(0.3);
+                        }else{
+                            intake.setPower(-1.0);
+                        }
+                        mStateTime.reset();
+                    }
+
                 break;
             case STATE_INTAKE2:
                 flip.read();
@@ -463,8 +531,14 @@ public class RED_Four_Stone_Backup extends OpMode {
                     localizer.GoTo(intake2, 0.2, 0.2, 0.2);
                     mStateTime.reset();
                     intake.close();
-                    if(delay.time() >= 0.7){
-                        flip.start();
+                    if (SkystonePos == 2){
+                        if(delay.time() >= 1.0) {
+                            flip.start();
+                        }
+                    }else{
+                        if(currentPos.getX() >= -20){
+                            flip.start();
+                        }
                     }
                     if(flip.IntakeFeedback()){
                         intake.setPower(0.0);
@@ -491,20 +565,19 @@ public class RED_Four_Stone_Backup extends OpMode {
                 break;
             case STATE_CROSS2:
                 if(SkystonePos == 0){
-                    saved_deposit = new Pose2d(-28.075, -81.972, 0.0);
+                    saved_deposit = new Pose2d(-16.075, -81.972, 0.0);
                 }else if(SkystonePos == 2){
-                    saved_deposit = new Pose2d(-28.075, -80.972, 0.0);
+                    saved_deposit = new Pose2d(-16.075, -80.972, 0.0);
                 }else if(SkystonePos == 1){
-                    saved_deposit = new Pose2d(-26.075, -82.972, 0.0);
+                    saved_deposit = new Pose2d(-16.075, -82.972, 0.0);
                 }
                 if(Math.abs(saved_deposit.getY() - currentPos.getX()) <= 8.0 && Math.abs(saved_deposit.getX() + currentPos.getY()) <= 2.0 || delay.time() >= 3.0) {
                     //flip.flipDown();
-                    slides.setPower(0.0);
+                    //slides.setPower(0.0);
                     localizer.getDrive().setPower(0.0,0.0,0.0);
                     drive.setPower(0.0,0.0,0.0);
                     localizer.getDrive().write();
-                    newState(State.STATE_RETURN2);
-                    //newState(State.STATE_PARK);
+                    newState(State.STATE_PARK);
                 }else{
                     //intake.setPower(0.15);
                     if(delay.time() >= 3.0){
@@ -517,8 +590,8 @@ public class RED_Four_Stone_Backup extends OpMode {
                         }
                     }
                     if(Math.abs(currentPos.getX()) >= 35){
-                        slides.PIDController(1);
-                        slides.setStack_count(1);
+                        //slides.PIDController(1);
+                        //slides.setStack_count(1);
                     }
                     if (Math.abs(-78.972 - currentPos.getX()) <= 35){
                         flip.operate(0);
@@ -540,8 +613,8 @@ public class RED_Four_Stone_Backup extends OpMode {
                 //flip.getClamp().getServo().setPosition(0.8);
                 break;
             case STATE_RETURN2:
-                if (delay.time() >= 0.25) {
-                    if (Math.abs(return_target2.getY() - currentPos.getX()) <= 4.0 && Math.abs(return_target2.getX() + currentPos.getY()) <= 2.0) {
+                if (delay.time() >= 1.0) {
+                    if (Math.abs(return_target2.getY() - currentPos.getX()) <= 4.0 && Math.abs(Math.abs(return_target2.getX()) - Math.abs(currentPos.getY())) <= 1.0) {
                         localizer.getDrive().setPower(0.0, 0.0, 0.0);
                         localizer.getDrive().write();
                         newState(State.STATE_INTAKE3);
@@ -549,7 +622,7 @@ public class RED_Four_Stone_Backup extends OpMode {
                         flip.resetPlatform();
                         intake.close();
                         if(Math.abs(currentPos.getX()) < 70){
-                            slides.dropSlides(-0.75);
+                            //slides.dropSlides(-0.75);
                         }
                         if (currentPos.getX() >= -26) {
                             localizer.GoTo(return_target2, 1.0, 1.0, 1.0);
@@ -557,7 +630,7 @@ public class RED_Four_Stone_Backup extends OpMode {
                             if(SkystonePos == 1 || SkystonePos == 0){
                                 localizer.GoTo(new Pose2d(return_target2.getX(), return_target2.getY(), 0.0), 1.0, 1.0, 1.0);
                             }else{
-                                localizer.GoTo(new Pose2d(-21.5, return_target2.getY(), 0.0), 1.0, 1.0, 1.0);
+                                localizer.GoTo(new Pose2d(-32.5, return_target2.getY(), 0.0), 1.0, 1.0, 1.0);
                             }
 
                         }
@@ -572,17 +645,17 @@ public class RED_Four_Stone_Backup extends OpMode {
                     }
                 }
                 else{
-                    //if (delay.time() >= 0.5) {
-                    flip.operate(1);
-                    //}
-                    slides.setPower(0.0);
+                    if (delay.time() >= 0.5) {
+                        flip.operate(1);
+                    }
+                    //slides.setPower(0.0);
                     localizer.GoTo(saved_deposit, 1.0,1.0,1.0);
                 }
                 break;
             case STATE_INTAKE3:
                 flip.read();
                 if(SkystonePos != 2){
-                    if(currentPos.getX() >= 0){
+                    if(currentPos.getX() >= -20){
                         flip.start();
                     }
                 }else{
@@ -606,9 +679,9 @@ public class RED_Four_Stone_Backup extends OpMode {
                     }
                     mStateTime.reset();
                     intake.close();
-                    if(delay.time() >= 0.5){
-                        flip.start();
-                    }
+
+                    //slides.setStack_count(0);
+                    //slides.setPower(0.0);
 
                     if(flip.IntakeFeedback()){
                         intake.setPower(0.0);
@@ -639,7 +712,7 @@ public class RED_Four_Stone_Backup extends OpMode {
                 if(SkystonePos == 0){
                     saved_deposit = new Pose2d(-25.428, -80.072, Math.toRadians(0));
                 }else if(SkystonePos == 1){
-                    saved_deposit = new Pose2d(-24.428, -81.072, Math.toRadians(0));
+                    saved_deposit = new Pose2d(-22.428, -81.072, Math.toRadians(0));
                 }else if(SkystonePos == 2){
                     saved_deposit = new Pose2d(-22.428, -80.072, Math.toRadians(0));
                 }
@@ -647,8 +720,8 @@ public class RED_Four_Stone_Backup extends OpMode {
                     localizer.getDrive().setPower(0.0,0.0,0.0);
                     localizer.getDrive().write();
                     drive.setPower(0.0, 0.0, 0.0);
-                    slides.setPower(0.0);
-                    newState(State.STATE_RETURN3);
+                    //slides.setPower(0.0);
+                    newState(State.STATE_PARK);
                 }else{
                     if(delay.time() >= 3.0){
                         intake.close();
@@ -664,8 +737,8 @@ public class RED_Four_Stone_Backup extends OpMode {
                         flip.operate(0);
                     }
                     if(Math.abs(currentPos.getX()) >= 35){
-                        slides.PIDController(1);
-                        slides.setStack_count(1);
+                        //slides.PIDController(1);
+                        //slides.setStack_count(1);
                     }
 
                     if (Math.abs(-78.972 - currentPos.getX()) <= 40){//Joemama
@@ -684,8 +757,8 @@ public class RED_Four_Stone_Backup extends OpMode {
                 }
                 break;
             case STATE_RETURN3:
-                if (delay.time() >= 0.25) {
-                    if (Math.abs(return_target3.getY() - currentPos.getX()) <= 4.0 && Math.abs(return_target3.getX() + currentPos.getY()) <= 2.0) {
+                if (delay.time() >= 1.0) {
+                    if (Math.abs(return_target3.getY() - currentPos.getX()) <= 4.0 && Math.abs(Math.abs(return_target2.getX()) - Math.abs(currentPos.getY())) <= 1.0) {
                         localizer.getDrive().setPower(0.0, 0.0, 0.0);
                         localizer.getDrive().write();
                         newState(State.STATE_INTAKE4);
@@ -693,7 +766,7 @@ public class RED_Four_Stone_Backup extends OpMode {
                         flip.resetPlatform();
                         intake.close();
                         if(Math.abs(currentPos.getX()) < 70){
-                            slides.dropSlides(-0.75);
+                            //slides.dropSlides(-0.75);
                         }
                         if (currentPos.getX() >= -20) {
                             localizer.GoTo(return_target3, 1.0, 1.0, 1.0);
@@ -722,14 +795,14 @@ public class RED_Four_Stone_Backup extends OpMode {
                     }
                 }
                 else{
-                    //if (delay.time() >= 0.25) {
-                    flip.operate(1);
-                    //}
-                    //else{
-                    //flip.clamp();
-                    //}
-                    slides.setStack_check(1);
-                    slides.setPower(0.0);
+                    if (delay.time() >= 0.5) {
+                        flip.operate(1);
+                    }
+                    else{
+                        flip.clamp();
+                    }
+                    //slides.setStack_check(1);
+                    //slides.setPower(0.0);
                     localizer.GoTo(saved_deposit, 1.0,1.0,1.0);
                 }
                 break;
@@ -771,7 +844,7 @@ public class RED_Four_Stone_Backup extends OpMode {
                     drive.setPower(0.0,0.0,0.0);
                     localizer.getDrive().write();
                     drive.setPower(0.0,0.0,0.0);
-                    slides.setPower(0.0);
+                    //slides.setPower(0.0);
                     newState(State.STATE_PARK);
                 }else{
                     //intake.setPower(0.15);
@@ -785,8 +858,8 @@ public class RED_Four_Stone_Backup extends OpMode {
                         }
                     }
                     if(Math.abs(currentPos.getX()) >= 36){
-                        slides.PIDController(2);
-                        slides.setStack_count(2);
+                        //slides.PIDController(2);
+                        //slides.setStack_count(2);
                     }
                     if (Math.abs(-80.972 - currentPos.getX()) <= 30){
                         flip.operate(0);
@@ -820,23 +893,19 @@ public class RED_Four_Stone_Backup extends OpMode {
                 flip.operate(4);
                 break;
             case STATE_PARK:
-                if (delay.time() >= 0.25) {
+                if (delay.time() >= 1.0) {
                     if(Math.abs(currentPos.getX()) < 55){
-                        slides.dropSlides(-0.75);
+                        //slides.dropSlides(-0.75);
                     }
                     if (Math.abs(currentPos.getX()) < 65){
-                        flip.start();
+                        flip.startAuto();
+                        flip.clamp();
                     }
-                    if (Math.abs(-20 - currentPos.getX()) <= 3.0) {
+                    if (Math.abs(-18.922 - currentPos.getX()) <= 5.0) {
                         localizer.getDrive().setPower(0.0, 0.0, 0.0);
                         localizer.getDrive().write();
                         newState(State.STATE_STOP);
-                        telemetry.addData("Tee Hee :)", "Deal with it this is my senior year");
-                    } else if (delay.time() >= 3.0) {
-                        localizer.getDrive().setPower(0.0, 0.0, 0.0);
-                        localizer.getDrive().write();
-                        newState(State.STATE_STOP);
-                    } else {
+                    }else {
                         if (delay.time() >= 2.0) {
                             intake.setPower(0.0);
                         } else {
@@ -844,34 +913,35 @@ public class RED_Four_Stone_Backup extends OpMode {
                         }
                         intake.close();
                         intake.setPower(0.0);
-                        localizer.GoTo(new Pose2d(-18.922, -36.976, Math.toRadians(15)), 1.0, 1.0, 1.0);
+                        if(SkystonePos == 0){
+                            localizer.GoTo(new Pose2d(-18.922, -39.976, Math.toRadians(0)), 1.0, 1.0, 1.0);
+                        }else{
+                            localizer.GoTo(new Pose2d(-16.922, -39.976, Math.toRadians(0)), 1.0, 1.0, 1.0);
+                        }
                         mStateTime.reset();
                     }
                 }
                 else{
-                    //if (delay.time() >= 0.25){
-                    flip.operate(1);
-                    //}
-                    slides.setStack_count(2);
-                    slides.setPower(0.0);
+                    if (delay.time() >= 0.5){
+                        flip.operate(1);
+                    }
+                    //slides.setStack_count(2);
+                    //slides.setPower(0.0);
                     localizer.GoTo(saved_deposit, 1.0,1.0,1.0);
                 }
                 break;
             case STATE_STOP:
                 localizer.getDrive().setPower(0.0,0.0,0.0);
                 localizer.getDrive().write();
+                //slides.setStack_count(0);
+                //slides.setPower(0.0);
                 drive.setPower(0.0, 0.0, 0.0);
-
-                telemetry.addData("Tee Hee :)", "Deal with it this is my senior year");
-                telemetry.addData("Tee Hee :)", "I Kicked you out of All your Discords");
-                telemetry.addData("Tee Hee :)", "My Name is Eashan and I'm a bitch. I like to break Odo wheels and suck dick.");
-                telemetry.addData("Tee Hee :)", "My Name is Eashan and I'm a bitch. I like to break Odo wheels and suck dick.");
-                telemetry.addData("Tee Hee :)", "My Name is Eashan and I'm a bitch. I like to break Odo wheels and suck dick.");
                 break;
         }
+        flip.getCapClamp().setPosition(0.4);
+
         telemetry.addData("POS: ", currentPos.toString());
         telemetry.addData("State: ", mRobotState);
-        telemetry.addData("time: ", mStateTime.time());
 
         //slides.write();
         if (mRobotState != State.STATE_PUSH_BACK) {

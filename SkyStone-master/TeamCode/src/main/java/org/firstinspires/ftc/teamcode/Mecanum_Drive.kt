@@ -89,9 +89,9 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
     var headingLock = false
 
     //Turn Coefficients
-    val kpA = 0.82 //0.39
+    val kpA = 0.86 //0.39
     val kiA = 0.0
-    val kdA = 0.07 //0.6
+    val kdA = 0.06 //0.6
 
     //Straight Line Coefficients
     val kpstr = 0.05     //0.03
@@ -188,7 +188,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         flip = FlipperV2(hardwareMap, telemetry)
         //pid = PID(hardwareMap, telemetry)
 
-        pidstr = PIDFController(PIDCoefficients(kpstr, kistr, kdstr), kv, ka, kstatic)
+        pidstr = PIDFController(PIDCoefficients(kpstf, kistf, kdstf), kv, ka, kstatic)
         pidstf = PIDFController(PIDCoefficients(kpstf, kistf, kdstf), kv, ka, kstatic)
         pidr = PIDFController(PIDCoefficients(kpA, kiA, kdA))
 
@@ -347,12 +347,15 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         }
 
         if (isPress2(gamepad.left_bumper, previous3)){
-            //automateLock = !automateLock
+            automateLock = !automateLock
+            /*
             slowmode2 = false
             slow_mode = false
             slow_mode3 = false
             slow_mode4 = false
             slow_mode5 = false
+
+             */
         }
 
         if(isPress2(gamepad2.dpad_left, previous8)){
@@ -384,8 +387,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             fine_tune = 0.4
             fine_tune_rot = 0.3
         }else if(slow_mode3){ //Foundation
-            fine_tune = 0.45
-            fine_tune_rot = 0.3
+            fine_tune = 0.6
+            fine_tune_rot = 0.45
         } else{
             fine_tune = 1.0
             fine_tune_rot = 0.5
@@ -518,6 +521,12 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         return test && !previous
     }
 
+    fun resetIntegral(){
+        pidstr.reset()
+        pidstf.reset()
+        pidr.reset()
+    }
+
     fun angleWrap(angle : Double) : Double{
         return (angle + (2 * Math.PI)) % (2 * Math.PI)
     }
@@ -557,7 +566,7 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
         motors.forEach {
             it.read(data)
         }
-
+        /*
         headingReadCount++
         if (headingAccessCount.toDouble() / headingReadCount.toDouble() < headingUpdateFrequency || true) {
             headingAccessCount++
@@ -565,6 +574,8 @@ class Mecanum_Drive(hardwareMap : HardwareMap, telemetry: Telemetry){
             orientation = imu.angularOrientation
         }
         headingReadCount++
+
+         */
     }
 
     fun setPower(y : Double, x : Double, rightX : Double){

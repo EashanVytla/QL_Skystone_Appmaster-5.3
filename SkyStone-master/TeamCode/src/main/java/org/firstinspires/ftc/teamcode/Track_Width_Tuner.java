@@ -38,7 +38,7 @@ public class Track_Width_Tuner extends OpMode {
         odos.dataUpdate(data2);
 
         if(drive.angleWrap(drive.angleWrap(drive.getExternalHeading())) <= Math.toRadians(270.0) && drive.angleWrap(drive.getExternalHeading()) >= Math.toRadians(90)){
-            relativetrackwidth = odos.getEstimatedPose().getHeading()/drive.angleWrap(drive.getExternalHeading());
+            relativetrackwidth = odos.getAbsoluteAngle()/drive.angleWrap(drive.getExternalHeading());
             //relativetrackwidth = odos.getDiff()/drive.angleWrap(drive.getExternalHeading());
             exampleTrackWidths.add(relativetrackwidth);
         }

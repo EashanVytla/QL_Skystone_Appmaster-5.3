@@ -31,7 +31,7 @@ import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_HEIGHT;
 import static org.firstinspires.ftc.teamcode.VisionContstants.IMAGE_WIDTH;
 
 @Autonomous(name = "Blue_4Stone_Auto", group = "Competition")
-//@Disabled
+@Disabled
 public class BLUE_MD_Auto_NoPause_Proto extends OpMode {
     int SkystonePos;
 
